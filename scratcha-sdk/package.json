@@ -1,0 +1,58 @@
+{
+  "name": "scratcha-sdk",
+  "version": "1.0.17",
+  "type": "module",
+  "description": "Scratcha SDK for React applications with canvas, image processing, and API communication",
+  "main": "dist/index.js",
+  "module": "dist/index.esm",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && npm run build:lib",
+    "build:lib": "vite build --config vite.lib.config.js",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "tailwindcss": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tw-to-css": "^0.0.12",
+    "vite": "^7.1.2"
+  },
+  "keywords": [
+    "react",
+    "sdk",
+    "scratcha",
+    "canvas",
+    "image-processing",
+    "api",
+    "widget"
+  ],
+  "author": "Scratcha Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scratcha/scratcha-sdk.git"
+  }
+}

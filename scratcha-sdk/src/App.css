@@ -1,0 +1,84 @@
+@import "tailwindcss";
+/* App 컴포넌트 전용 스타일 */
+
+.app-container {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  padding: 2rem;
+}
+
+.app-content {
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.app-title {
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #1f2937;
+}
+
+.mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mode-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.mode-button.active {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.mode-button:not(.active) {
+  background-color: white;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.mode-button:not(.active):hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.sdk-wrapper {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .mode-selector {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .mode-button {
+    width: 100%;
+    max-width: 200px;
+  }
+}

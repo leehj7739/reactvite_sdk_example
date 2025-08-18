@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scratcha SDK 테스트</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f3f4f6;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .mode-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        justify-content: center;
+      }
+      .mode-btn {
+        padding: 10px 20px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .mode-btn.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+      }
+      .sdk-container {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        background: #f9fafb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 style="text-align: center; margin-bottom: 30px">
+        Scratcha SDK 테스트
+      </h1>
+
+      <div class="mode-buttons">
+        <button class="mode-btn active" onclick="setMode('demo')">
+          Demo 모드
+        </button>
+        <button class="mode-btn" onclick="setMode('normal')">
+          Normal 모드
+        </button>
+      </div>
+
+      <div class="sdk-container" id="sdk-container">
+        <!-- SDK가 여기에 렌더링됩니다 -->
+      </div>
+    </div>
+
+    <!-- React 및 ReactDOM -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- SDK -->
+    <script type="module">
+      import { ScratchaWidget } from "./dist/index.esm.js";
+
+      let currentMode = "demo";
+
+      window.setMode = function (mode) {
+        currentMode = mode;
+
+        // 버튼 스타일 업데이트
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+
+        // SDK 다시 렌더링
+        renderSDK();
+      };
+
+      function renderSDK() {
+        const container = document.getElementById("sdk-container");
+        const root = ReactDOM.createRoot(container);
+
+        root.render(
+          React.createElement(ScratchaWidget, {
+            mode: currentMode,
+            apiKey: currentMode === "normal" ? "your-api-key-here" : undefined,
+            endpoint: "https://api.scratcha.com",
+          })
+        );
+      }
+
+      // 초기 렌더링
+      renderSDK();
+    </script>
+  </body>
+</html>
