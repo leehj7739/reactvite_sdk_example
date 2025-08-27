@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
-  getRandomDemoResponse,
   simulateApiDelay
 } from '../utils/demoData'
 
@@ -64,8 +63,22 @@ export const useScratchaAPI = ({
         // Demo 모드에서는 지연 시간 시뮬레이션
         await simulateApiDelay()
 
-        // Demo 응답 생성
-        const demoResponse = getRandomDemoResponse('process')
+        // 데모 모드에서 실제 정답 검증
+        const isCorrect = data.selectedAnswer === data.correctAnswer
+
+        const demoResponse = {
+          success: isCorrect,
+          result: {
+            quizId: data.quizId,
+            selectedAnswer: data.selectedAnswer,
+            correctAnswer: data.correctAnswer,
+            isCorrect: isCorrect,
+            timestamp: Date.now(),
+            processingTime: Math.random() * 500 + 500 // 500-1000ms
+          },
+          message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
+        }
+
         setLastResponse(demoResponse)
         return demoResponse
 

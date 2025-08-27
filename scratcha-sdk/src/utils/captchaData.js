@@ -1,11 +1,11 @@
 // 캡차 관련 데이터 및 유틸리티
 export const captchaData = {
-  // 캡차 이미지 (Base64)
+  // 캡차 이미지 (실제 이미지 파일 경로 사용)
   captchaImages: [
-    // 간단한 테스트 캡차 이미지들
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+    // 실제 이미지 파일 경로들
+    '/images/scratcha_logo_processed.png',
+    '/images/image_cover.png',
+    '/images/scratchalogo.svg'
   ],
 
   // 캡차 정답 (Demo용)
@@ -40,10 +40,10 @@ export const generateCaptchaId = () => {
   return `captcha_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-// 커버 이미지 (모든 문제에서 사용)
-export const getCoverImage = () => {
-  return '/images/image_cover.png'
-}
+// 커버 이미지 (모든 문제에서 사용) - imageAssets.js에서 제공됨
+// export const getCoverImage = () => {
+//   return '/images/image_cover.png'
+// }
 
 // 캡차 이미지 랜덤 선택
 export const getRandomCaptchaImage = () => {

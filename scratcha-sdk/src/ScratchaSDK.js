@@ -70,7 +70,7 @@ class ScratchaSDK {
     return response.json()
   }
 
-  // 이미지 처리
+  // 이미지 처리 (실제 이미지 파일 경로 지원)
   async processImages(images, options = {}) {
     this.checkInitialization()
 
@@ -82,9 +82,19 @@ class ScratchaSDK {
         images.map(async (imageData, index) => {
           let processedImage = imageData
 
+          // 이미지 파일 경로인 경우 로딩
+          if (typeof imageData === 'string' && !imageData.startsWith('data:')) {
+            try {
+              processedImage = await imageUtils.loadImageFile(imageData)
+            } catch (error) {
+              logger.warn(`이미지 파일 로딩 실패: ${imageData}`, error)
+              // 실패 시 원본 경로 유지
+            }
+          }
+
           // 이미지 압축 (옵션)
           if (options.compress) {
-            processedImage = await imageUtils.compressImage(imageData, options.quality || 0.8)
+            processedImage = await imageUtils.compressImage(processedImage, options.quality || 0.8)
           }
 
           // 이미지 크기 조정 (옵션)

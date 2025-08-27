@@ -25,14 +25,21 @@ const Canvas = forwardRef(({
         context.clearRect(0, 0, width, height)
       }
     },
-    loadImage: (imageUrl) => {
-      console.log('Canvas: 이미지 로딩 시작:', imageUrl)
+    loadImage: (imageUrl, isCoverImage = false) => {
+      console.log('Canvas: 이미지 로딩 시작:', imageUrl, isCoverImage ? '(커버 이미지)' : '')
       const img = new Image()
       img.crossOrigin = 'anonymous'
       img.onload = () => {
         console.log('Canvas: 이미지 로딩 성공:', imageUrl)
         if (context) {
           context.clearRect(0, 0, width, height)
+
+          // 커버 이미지인 경우 검정색 배경 설정
+          if (isCoverImage) {
+            context.fillStyle = '#000000'
+            context.fillRect(0, 0, width, height)
+          }
+
           context.drawImage(img, 0, 0, width, height)
 
           // 스크래치 기능이 활성화된 경우 원본 이미지 저장

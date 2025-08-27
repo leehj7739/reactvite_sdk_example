@@ -1,4 +1,4 @@
-// 이미지 관련 유틸리티
+// 이미지 관련 유틸리티 (실제 이미지 파일 지원)
 export const imageUtils = {
   // Base64 이미지를 Blob으로 변환
   base64ToBlob: (base64, mimeType = 'image/png') => {
@@ -69,6 +69,29 @@ export const imageUtils = {
       }
       img.src = imageData
     })
+  },
+
+  // 실제 이미지 파일 로딩
+  loadImageFile: async (imagePath) => {
+    try {
+      const response = await fetch(imagePath)
+      if (!response.ok) {
+        throw new Error(`이미지 로딩 실패: ${response.status}`)
+      }
+      const blob = await response.blob()
+      return await imageUtils.blobToBase64(blob)
+    } catch (error) {
+      console.error('이미지 파일 로딩 오류:', error)
+      throw error
+    }
+  },
+
+  // 이미지 파일 유효성 검사
+  isValidImageFile: (file) => {
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const maxSize = 10 * 1024 * 1024 // 10MB
+
+    return validTypes.includes(file.type) && file.size <= maxSize
   }
 }
 
