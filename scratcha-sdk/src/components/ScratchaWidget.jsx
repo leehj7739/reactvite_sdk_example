@@ -106,7 +106,7 @@ const ScratchaWidget = ({
     }
 
     return (
-        <div className="scratcha-widget">
+        <div className="scratcha-widget" data-role="scratcha-container">
             {/* 로딩 오버레이 */}
             {isLoading && (
                 <div className="overlay">
@@ -149,7 +149,7 @@ const ScratchaWidget = ({
             {/* Canvas 영역 */}
             <div className="canvas-area">
                 <div className="canvas-wrapper">
-                    <div className="canvas-container">
+                    <div className="canvas-container" data-role="canvas-container">
                         {/* 실제 이미지 캔버스 (배경) */}
                         <Canvas
                             ref={canvas2Ref}
@@ -171,9 +171,9 @@ const ScratchaWidget = ({
             </div>
 
             {/* 지시문 */}
-            <div className="instruction-area">
-                <div className="instruction-container">
-                    <p className="instruction-text">
+            <div className="instruction-area" data-role="instruction-area">
+                <div className="instruction-container" data-role="instruction-container">
+                    <p className="instruction-text" data-role="instruction-text">
                         화면을 스크래치하여 정답을 선택해주세요.
                     </p>
                     {/* 새로고침 버튼 */}
@@ -181,6 +181,7 @@ const ScratchaWidget = ({
                         onClick={handleReset}
                         disabled={isLoading}
                         className="refresh-button"
+                        data-role="refresh-button"
                     >
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -190,13 +191,15 @@ const ScratchaWidget = ({
             </div>
 
             {/* 정답 선택 버튼들 */}
-            <div className="answer-buttons">
+            <div className="answer-buttons" data-role="answer-container">
                 {answerOptions.map((option, index) => (
                     <button
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
                         disabled={isLoading || result}
                         className={`answer-button ${selectedAnswer === option ? 'selected' : ''}`}
+                        data-role={`answer-${index + 1}`}
+                        data-answer={option}
                     >
                         {option}
                     </button>
