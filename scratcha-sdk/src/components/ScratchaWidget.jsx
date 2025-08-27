@@ -37,10 +37,12 @@ const ScratchaWidget = ({
         setCorrectAnswer(quiz.answer)
         setAnswerOptions(options)
 
-        // 이미지를 Canvas에 로드
+        // 커버 이미지 먼저 로드, 완료 후 실제 이미지 로드
         if (canvas1Ref.current && canvas2Ref.current) {
-            canvas1Ref.current.loadImage(getCoverImagePath(), true) // 커버 이미지는 검정색 배경
-            canvas2Ref.current.loadImage(getQuizImagePath(quiz.image_url), false) // 퀴즈 이미지는 일반 배경
+            canvas1Ref.current.loadImage(getCoverImagePath(), true, () => {
+                // 커버 이미지 로딩 완료 후 실제 이미지 로드
+                canvas2Ref.current.loadImage(getQuizImagePath(quiz.image_url), false)
+            })
         }
     }
 
@@ -107,7 +109,7 @@ const ScratchaWidget = ({
         <div className="scratcha-widget" style={{
             position: 'relative',
             width: '340px',
-            height: '650px',
+            height: '600px',
             border: '1px solid #e5e7eb',
             borderRadius: '8px',
             padding: '20px',
@@ -168,7 +170,7 @@ const ScratchaWidget = ({
                             ref={canvas2Ref}
                             width={300}
                             height={300}
-                            className="border border-gray-300 rounded-lg"
+                            className="border border-gray-300 rounded-lg shadow-sm"
                         />
 
                         {/* 커버 캔버스 (위에 겹쳐서 표시) */}
@@ -177,7 +179,7 @@ const ScratchaWidget = ({
                                 ref={canvas1Ref}
                                 width={300}
                                 height={300}
-                                className="border border-gray-300 rounded-lg opacity-90"
+                                className="border border-gray-300 rounded-lg opacity-90 shadow-sm"
                                 enableScratch={true}
                             />
                         </div>
@@ -187,20 +189,20 @@ const ScratchaWidget = ({
 
             {/* 지시문 */}
             <div className="mb-2 w-full">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg py-2 px-4 w-full relative">
-                    <p className="text-[10px] font-bold text-blue-800 text-center pr-12">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg py-2 px-4 w-full relative flex items-center justify-center">
+                    <p className="text-[10px] font-bold text-blue-800 text-center">
                         화면을 스크래치하여 정답을 선택해주세요.
                     </p>
                     {/* 새로고침 버튼 */}
                     <button
                         onClick={handleReset}
                         disabled={isLoading}
-                        className={`absolute top-1/2 right-4 transform -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isLoading
+                        className={`absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isLoading
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             : 'bg-yellow-500 text-white hover:bg-yellow-600'
                             }`}
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>

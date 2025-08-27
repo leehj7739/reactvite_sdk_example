@@ -25,7 +25,7 @@ const Canvas = forwardRef(({
         context.clearRect(0, 0, width, height)
       }
     },
-    loadImage: (imageUrl, isCoverImage = false) => {
+    loadImage: (imageUrl, isCoverImage = false, callback) => {
       console.log('Canvas: 이미지 로딩 시작:', imageUrl, isCoverImage ? '(커버 이미지)' : '')
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -48,6 +48,11 @@ const Canvas = forwardRef(({
           }
 
           onImageLoad?.(imageUrl)
+
+          // 콜백 함수가 있으면 실행
+          if (callback && typeof callback === 'function') {
+            callback()
+          }
         }
       }
       img.onerror = (error) => {
