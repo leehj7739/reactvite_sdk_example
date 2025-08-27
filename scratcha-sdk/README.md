@@ -1,6 +1,6 @@
 # Scratcha SDK
 
-React 애플리케이션을 위한 Scratcha SDK입니다. 캔버스 기반 이미지 처리, 퀴즈 시스템, API 통신 기능을 제공합니다.
+React 애플리케이션을 위한 Scratcha SDK입니다. 캔버스 기반 이미지 처리, 캡차 시스템, API 통신 기능을 제공합니다.
 
 ## 🚀 설치
 
@@ -11,15 +11,16 @@ npm install scratcha-sdk
 ## 📦 주요 기능
 
 - **캔버스 기반 이미지 처리**: 스크래치 기능이 있는 캔버스 컴포넌트
-- **퀴즈 시스템**: 이미지 기반 퀴즈 및 정답 검증
-- **API 통신**: 이미지, 배열, 텍스트 데이터 송수신
+- **캡차 시스템**: 이미지 기반 캡차 및 정답 검증
+- **API 통신**: 캡차 문제 요청 및 정답 검증
 - **데모 모드**: 내부 데이터로 테스트 가능
-- **반응형 UI**: Tailwind CSS 기반 모던한 디자인
-- **TypeScript 지원**: 완전한 타입 정의 제공
+- **반응형 UI**: 순수 CSS 기반 모던한 디자인
+- **CORS 지원**: 외부 이미지 로딩 지원
+- **로딩 상태**: 이미지 로딩 및 API 요청 상태 표시
 
 ## 🎯 빠른 시작
 
-### 기본 사용법
+### 기본 사용법 (데모 모드)
 
 ```jsx
 import React from "react";
@@ -28,10 +29,13 @@ import { ScratchaWidget } from "scratcha-sdk";
 function App() {
   const handleSuccess = (result) => {
     console.log("성공:", result);
+    // result.result.selectedAnswer로 선택한 답안에 접근
+    alert(`성공! 선택한 답안: ${result.result.selectedAnswer}`);
   };
 
   const handleError = (error) => {
     console.error("오류:", error);
+    alert(`오류: ${error.message || "알 수 없는 오류"}`);
   };
 
   return (
@@ -40,7 +44,6 @@ function App() {
         mode="demo"
         onSuccess={handleSuccess}
         onError={handleError}
-        theme="light"
       />
     </div>
   );
@@ -56,13 +59,24 @@ import React from "react";
 import { ScratchaWidget } from "scratcha-sdk";
 
 function App() {
+  const handleSuccess = (result) => {
+    console.log("성공:", result);
+    // API 응답 구조: result.result.selectedAnswer
+    alert(`성공! 선택한 답안: ${result.result.selectedAnswer}`);
+  };
+
+  const handleError = (error) => {
+    console.error("오류:", error);
+    alert(`오류: ${error.message || "알 수 없는 오류"}`);
+  };
+
   return (
     <ScratchaWidget
       apiKey="your-api-key"
       endpoint="https://api.your-domain.com"
       mode="normal"
-      onSuccess={(result) => console.log("성공:", result)}
-      onError={(error) => console.error("오류:", error)}
+      onSuccess={handleSuccess}
+      onError={handleError}
     />
   );
 }
@@ -77,10 +91,53 @@ function App() {
 | `apiKey`    | `string`                | -          | API 인증 키                  |
 | `endpoint`  | `string`                | -          | API 엔드포인트 URL           |
 | `mode`      | `'demo' \| 'normal'`    | `'normal'` | 데모 모드 또는 실제 API 모드 |
-| `theme`     | `'light' \| 'dark'`     | `'light'`  | UI 테마                      |
-| `className` | `string`                | -          | 추가 CSS 클래스              |
 | `onSuccess` | `(result: any) => void` | -          | 성공 시 콜백                 |
 | `onError`   | `(error: any) => void`  | -          | 오류 시 콜백                 |
+
+## 📡 API 응답 구조
+
+### 성공 응답 (정답)
+
+```javascript
+{
+  success: true,
+  result: {
+    clientToken: "token-123",
+    selectedAnswer: "사과",        // 사용자가 선택한 답안
+    isCorrect: true,
+    timestamp: 1234567890,
+    processingTime: 750
+  },
+  message: "정답입니다!"
+}
+```
+
+### 실패 응답 (오답)
+
+```javascript
+{
+  success: false,
+  result: {
+    clientToken: "token-123",
+    selectedAnswer: "바나나",      // 사용자가 선택한 답안
+    isCorrect: false,
+    timestamp: 1234567890,
+    processingTime: 750
+  },
+  message: "오답입니다. 다시 시도해주세요."
+}
+```
+
+### 캡차 문제 요청 응답
+
+```javascript
+{
+  clientToken: "token-123",
+  imageUrl: "https://example.com/image.jpg",
+  prompt: "화면을 스크래치하여 정답을 선택해주세요.",
+  options: ["사과", "바나나", "오렌지", "포도"]
+}
+```
 
 ## 🎨 컴포넌트
 
@@ -91,12 +148,7 @@ function App() {
 ```jsx
 import { ScratchaWidget } from "scratcha-sdk";
 
-<ScratchaWidget
-  mode="demo"
-  theme="light"
-  onSuccess={handleSuccess}
-  onError={handleError}
-/>;
+<ScratchaWidget mode="demo" onSuccess={handleSuccess} onError={handleError} />;
 ```
 
 ### Canvas
@@ -107,10 +159,10 @@ import { ScratchaWidget } from "scratcha-sdk";
 import { Canvas } from "scratcha-sdk";
 
 <Canvas
-  width={500}
-  height={500}
+  width={300}
+  height={300}
   enableScratch={true}
-  className="border rounded"
+  onImageLoad={(url) => console.log("이미지 로드됨:", url)}
 />;
 ```
 
@@ -121,7 +173,7 @@ import { Canvas } from "scratcha-sdk";
 ```jsx
 import { Button } from "scratcha-sdk";
 
-<Button onClick={handleClick} variant="primary" disabled={false}>
+<Button onClick={handleClick} variant="primary" size="medium" disabled={false}>
   클릭하세요
 </Button>;
 ```
@@ -146,24 +198,26 @@ API 통신을 위한 커스텀 훅입니다.
 import { useScratchaAPI } from "scratcha-sdk";
 
 function MyComponent() {
-  const { isConnected, sendRequest } = useScratchaAPI({
+  const { isLoading, getCaptchaProblem, verifyAnswer } = useScratchaAPI({
     apiKey: "your-api-key",
     endpoint: "https://api.example.com",
     mode: "normal",
   });
 
-  const handleSubmit = async () => {
-    const result = await sendRequest({
-      image: "base64-image-data",
-      text: "some text",
-      array: [1, 2, 3],
-    });
+  const handleGetProblem = async () => {
+    const problem = await getCaptchaProblem();
+    console.log("캡차 문제:", problem);
+  };
+
+  const handleVerify = async (clientToken, answer) => {
+    const result = await verifyAnswer(clientToken, answer);
+    console.log("검증 결과:", result);
   };
 
   return (
     <div>
-      <p>연결 상태: {isConnected ? "연결됨" : "연결 안됨"}</p>
-      <button onClick={handleSubmit}>전송</button>
+      <p>로딩 상태: {isLoading ? "로딩 중..." : "완료"}</p>
+      <button onClick={handleGetProblem}>문제 가져오기</button>
     </div>
   );
 }
@@ -171,13 +225,15 @@ function MyComponent() {
 
 ## 🛠️ 유틸리티 함수
 
-### 퀴즈 관련 함수
+### 캡차 관련 함수
 
 ```jsx
 import {
   getRandomQuiz,
   generateQuizAnswerOptions,
-  validateQuiz,
+  getCoverImagePath,
+  getLogoImagePath,
+  getQuizImagePath,
 } from "scratcha-sdk";
 
 // 랜덤 퀴즈 가져오기
@@ -186,8 +242,10 @@ const quiz = getRandomQuiz();
 // 답안 옵션 생성
 const options = generateQuizAnswerOptions(quiz);
 
-// 답안 검증
-const validation = validateQuiz("사용자 답안", "정답");
+// 이미지 경로 가져오기
+const coverImage = getCoverImagePath();
+const logoImage = getLogoImagePath();
+const quizImage = getQuizImagePath(quiz.image_url);
 ```
 
 ## 🎯 데모 모드
@@ -199,24 +257,59 @@ const validation = validateQuiz("사용자 답안", "정답");
   mode="demo"
   onSuccess={(result) => {
     console.log("데모 성공:", result);
+    // result.result.selectedAnswer로 접근
+    console.log("선택한 답안:", result.result.selectedAnswer);
   }}
 />
 ```
+
+## 🔧 고급 기능
+
+### 이미지 로딩 상태 관리
+
+```jsx
+// normal 모드에서 이미지 로딩 중에는 상호작용이 차단됩니다
+<ScratchaWidget
+  mode="normal"
+  apiKey="your-api-key"
+  endpoint="https://api.example.com"
+  onSuccess={handleSuccess}
+  onError={handleError}
+/>
+```
+
+### CORS 이미지 로딩
+
+SDK는 자동으로 CORS 문제를 해결하여 외부 이미지를 로딩합니다.
+
+### 콘솔 로깅
+
+개발 모드에서 이미지 로딩 시간과 API 응답 결과가 콘솔에 표시됩니다.
 
 ## 📁 파일 구조
 
 ```
 scratcha-sdk/
 ├── dist/                 # 빌드된 파일들
-│   ├── index.js         # CommonJS 번들
-│   ├── index.esm        # ES 모듈 번들
-│   ├── index.d.ts       # TypeScript 타입 정의
-│   └── images/          # 이미지 파일들
+│   ├── index.js         # ES 모듈 번들
+│   ├── index.umd.cjs    # UMD 번들
+│   └── vite.svg         # 빌드 아이콘
 ├── src/
 │   ├── components/      # React 컴포넌트들
+│   │   ├── ScratchaWidget.jsx
+│   │   ├── Canvas.jsx
+│   │   ├── Button.jsx
+│   │   └── TextDisplay.jsx
 │   ├── hooks/          # 커스텀 훅들
+│   │   └── useScratchaAPI.js
 │   ├── utils/          # 유틸리티 함수들
-│   └── index.js        # 메인 진입점
+│   │   ├── captchaData.js
+│   │   ├── demoData.js
+│   │   ├── helpers.js
+│   │   ├── imageAssets.js
+│   │   └── imageUtils.js
+│   ├── index.js        # 메인 진입점 (CSS 포함)
+│   └── index.css       # 스타일 정의
 └── package.json
 ```
 
@@ -268,9 +361,22 @@ MIT License
 
 ## 🔄 버전 히스토리
 
+- **v2.0.3**: 최신 릴리스
+
+  - CSS 인라인 주입 방식으로 변경
+  - `instruction-container` 크기 문제 해결
+  - API 응답 구조 개선
+  - CORS 이미지 로딩 지원
+  - 로딩 상태 관리 개선
+
+- **v2.0.0**: 메이저 업데이트
+
+  - 헤더 값 안전 처리 (ISO-8859-1 오류 해결)
+  - 린트 에러 해결
+  - ASCII 범위 필터링
+
 - **v1.0.0**: 초기 릴리스
   - 캔버스 기반 이미지 처리
-  - 퀴즈 시스템
+  - 캡차 시스템
   - API 통신
   - 데모 모드
-  - TypeScript 지원

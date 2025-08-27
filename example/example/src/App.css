@@ -57,17 +57,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem 1rem;
 }
 
 .widget-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: white;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 340px;
+  height: 600px;
   max-width: 100%;
-  width: 100%;
-  max-width: 800px;
+  max-height: 100vh;
 }
 
 .App-footer {
@@ -105,10 +108,12 @@
   }
 
   .App-main {
-    padding: 1rem;
+    padding: 0;
   }
 
   .widget-container {
     border-radius: 15px;
+    width: 340px;
+    height: 600px;
   }
 }

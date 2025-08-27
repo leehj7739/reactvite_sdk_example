@@ -92,13 +92,29 @@ const ScratchaWidget = ({
         }
     }, [mode, getCaptchaProblem])
 
-    // 컴포넌트 마운트 시 캡차 문제 초기화
+    // 컴포넌트 마운트 시 및 mode 변경 시 캡차 문제 초기화
     useEffect(() => {
+        // mode가 변경되면 모든 상태 초기화
+        setSelectedAnswer(null)
+        setShowResult(false)
+        setResult(null)
+        setAnswerOptions([])
+        setClientToken('')
+        setIsImageLoading(false)
+
+        // Canvas 초기화
+        if (canvas1Ref.current) {
+            canvas1Ref.current.clear()
+        }
+        if (canvas2Ref.current) {
+            canvas2Ref.current.clear()
+        }
+
         const timer = setTimeout(() => {
             initializeProblem()
         }, 100)
         return () => clearTimeout(timer)
-    }, [initializeProblem])
+    }, [initializeProblem, mode])
 
     const handleAnswerSelect = async (answer) => {
         if (isLoading || result) return
