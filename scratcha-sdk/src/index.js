@@ -123,6 +123,7 @@
         border-radius: 8px;
         padding: 8px 16px;
         width: 100%;
+        height: auto;
         position: relative;
         display: flex;
         align-items: center;

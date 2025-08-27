@@ -1,6 +1,6 @@
 {
   "name": "scratcha-sdk",
-  "version": "1.1.9",
+  "version": "1.2.5",
   "type": "module",
   "description": "Scratcha SDK for React applications with canvas, image processing, and API communication",
   "main": "dist/index.umd.cjs",
