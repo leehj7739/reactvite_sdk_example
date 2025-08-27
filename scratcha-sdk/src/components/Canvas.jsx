@@ -24,12 +24,24 @@ const Canvas = forwardRef(({
         context.clearRect(0, 0, width, height)
       }
     },
-    loadImage: (imageUrl, isCoverImage = false, callback) => {
-      console.log('Canvas: 이미지 로딩 시작:', imageUrl, isCoverImage ? '(커버 이미지)' : '')
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        console.log('Canvas: 이미지 로딩 성공:', imageUrl)
+    loadImage: async (imageUrl, isCoverImage = false, callback) => {
+      const startTime = Date.now()
+      console.log('Canvas: 이미지 로딩 시작:', {
+        imageUrl: imageUrl,
+        isCoverImage: isCoverImage,
+        timestamp: new Date().toISOString()
+      })
+
+      const drawImageToCanvas = (img) => {
+        const loadTime = Date.now() - startTime
+        console.log('Canvas: 이미지 로딩 성공:', {
+          imageUrl: imageUrl,
+          loadTime: `${loadTime}ms`,
+          isCoverImage: isCoverImage,
+          imageSize: `${img.width}x${img.height}`,
+          timestamp: new Date().toISOString()
+        })
+
         if (context) {
           context.clearRect(0, 0, width, height)
 
@@ -54,10 +66,88 @@ const Canvas = forwardRef(({
           }
         }
       }
-      img.onerror = (error) => {
-        console.error('Canvas: 이미지 로딩 실패:', imageUrl, error)
+
+      // 외부 URL인 경우 직접 fetch를 사용하여 로딩
+      if (imageUrl.startsWith('http')) {
+        console.log('Canvas: 외부 이미지 fetch로 로딩 시도:', imageUrl)
+
+        const fetchStartTime = Date.now()
+
+        try {
+          const response = await fetch(imageUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'image/*'
+            }
+          })
+
+          const fetchResponseTime = Date.now() - fetchStartTime
+
+          if (!response.ok) {
+            throw new Error(`HTTP 오류: ${response.status}`)
+          }
+
+          const blob = await response.blob()
+          const objectUrl = URL.createObjectURL(blob)
+
+          const img = new Image()
+          img.onload = () => {
+            URL.revokeObjectURL(objectUrl) // 메모리 정리
+            const totalFetchTime = Date.now() - fetchStartTime
+            console.log('Canvas: fetch로 이미지 로딩 성공:', {
+              imageUrl: imageUrl,
+              responseTime: `${fetchResponseTime}ms`,
+              totalTime: `${totalFetchTime}ms`,
+              blobSize: `${(blob.size / 1024).toFixed(2)}KB`
+            })
+            drawImageToCanvas(img)
+          }
+          img.onerror = (error) => {
+            URL.revokeObjectURL(objectUrl)
+            const totalFetchTime = Date.now() - fetchStartTime
+            console.error('Canvas: fetch 이미지 로딩 실패:', {
+              imageUrl: imageUrl,
+              error: error.message,
+              responseTime: `${fetchResponseTime}ms`,
+              totalTime: `${totalFetchTime}ms`
+            })
+            // fallback 시도
+            fallbackImageLoad()
+          }
+          img.src = objectUrl
+          return // 성공하면 종료
+
+        } catch (error) {
+          const totalFetchTime = Date.now() - fetchStartTime
+          console.error('Canvas: fetch 요청 실패:', {
+            imageUrl: imageUrl,
+            error: error.message,
+            time: `${totalFetchTime}ms`
+          })
+          // fallback 시도
+          fallbackImageLoad()
+        }
+      } else {
+        // 로컬 이미지인 경우 직접 로드
+        fallbackImageLoad()
       }
-      img.src = imageUrl
+
+      // fallback 함수: 직접 이미지 로드 시도
+      function fallbackImageLoad() {
+        console.log('Canvas: fallback 이미지 로딩 시도:', imageUrl)
+
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          console.log('Canvas: fallback 이미지 로딩 성공')
+          drawImageToCanvas(img)
+        }
+        img.onerror = (error) => {
+          console.error('Canvas: fallback 이미지 로딩도 실패:', error)
+          console.error('Canvas: 모든 이미지 로딩 방법 실패:', imageUrl)
+        }
+        img.src = imageUrl
+      }
     },
     drawImage: (imageElement) => {
       if (context && imageElement) {

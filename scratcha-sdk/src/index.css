@@ -164,6 +164,20 @@ button {
   transform: translateY(-50%) scale(1.05);
 }
 
+.scratcha-widget .refresh-button:not(:disabled):active {
+  background-color: #a16207;
+  transform: translateY(-50%) scale(0.95);
+}
+
+.scratcha-widget .refresh-button:not(:disabled):focus {
+  outline: none;
+}
+
+.scratcha-widget .refresh-button:not(:disabled):focus:not(:active) {
+  background-color: #eab308;
+  transform: translateY(-50%) scale(1);
+}
+
 .scratcha-widget .refresh-button:disabled {
   background-color: #d1d5db;
   color: #6b7280;
@@ -204,6 +218,11 @@ button {
 
 .scratcha-widget .answer-button:not(:disabled):hover {
   background-color: #ca8a04;
+}
+
+.scratcha-widget .answer-button:not(:disabled):active {
+  background-color: #a16207;
+  transform: scale(0.98);
 }
 
 .scratcha-widget .answer-button.selected {

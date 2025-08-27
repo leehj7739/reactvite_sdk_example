@@ -39,6 +39,8 @@ function App() {
         <div className="widget-container">
           <ScratchaWidget
             mode={mode}
+            apiKey={mode === 'normal' ? '9e73159d-ab7b-4d80-bc42-ff999e5f5a1e' : undefined}
+            endpoint="https://api.scratcha.cloud"
             onSuccess={handleSuccess}
             onError={handleError}
           />

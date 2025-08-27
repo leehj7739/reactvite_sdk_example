@@ -4,7 +4,7 @@ class ScratchaSDK {
   constructor(config = {}) {
     this.config = {
       apiKey: config.apiKey,
-      endpoint: config.endpoint || 'https://api.scratcha.com',
+      endpoint: config.endpoint,
       timeout: config.timeout || 10000,
       retryAttempts: config.retryAttempts || 3,
       ...config

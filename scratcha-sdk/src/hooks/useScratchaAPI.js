@@ -1,127 +1,60 @@
-import { useState, useEffect, useCallback } from 'react'
-import {
-  simulateApiDelay
-} from '../utils/demoData'
+import { useState, useCallback } from 'react'
+import { getRandomQuiz, generateQuizAnswerOptions } from '../utils/captchaData'
+import { getQuizImagePath } from '../utils/imageUtils'
+
+// 헤더 값을 안전하게 처리하는 함수
+const sanitizeHeaderValue = (value) => {
+  if (typeof value !== 'string') {
+    return String(value)
+  }
+  // ASCII 범위의 문자만 허용 (0-127)
+  return value.split('').filter(char => char.charCodeAt(0) <= 127).join('')
+}
 
 export const useScratchaAPI = ({
   apiKey,
-  endpoint = 'https://api.scratcha.com',
+  endpoint,
   mode = 'normal' // 'demo' | 'normal'
 }) => {
-  const [isConnected, setIsConnected] = useState(mode === 'demo' ? true : false)
   const [isLoading, setIsLoading] = useState(false)
   const [lastResponse, setLastResponse] = useState(null)
   const [error, setError] = useState(null)
 
-  // 연결 상태 확인
-  const checkConnection = useCallback(async () => {
+  // 캡차 문제 요청
+  const getCaptchaProblem = useCallback(async () => {
     if (mode === 'demo') {
-      // Demo 모드에서는 항상 연결된 것으로 간주
-      setIsConnected(true)
-      return
-    }
-
-    if (!apiKey) {
-      setIsConnected(false)
-      return
-    }
-
-    try {
-      const response = await fetch(`${endpoint}/health`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      setIsConnected(response.ok)
-    } catch (err) {
-      setIsConnected(false)
-      console.warn('API 연결 확인 실패:', err.message)
-    }
-  }, [apiKey, endpoint, mode])
-
-  // 초기 연결 확인
-  useEffect(() => {
-    checkConnection()
-  }, [checkConnection])
-
-  // 주기적 연결 상태 확인 (30초마다)
-  useEffect(() => {
-    const interval = setInterval(checkConnection, 30000)
-    return () => clearInterval(interval)
-  }, [checkConnection])
-
-  // API 요청 전송
-  const sendRequest = useCallback(async (data) => {
-    if (mode === 'demo') {
-      setIsLoading(true)
       setError(null)
 
-      try {
-        // Demo 모드에서는 지연 시간 시뮬레이션
-        await simulateApiDelay()
+      // 데모 모드에서는 기존 퀴즈 데이터 사용
+      const quiz = getRandomQuiz()
+      const options = generateQuizAnswerOptions(quiz)
 
-        // 데모 모드에서 실제 정답 검증
-        const isCorrect = data.selectedAnswer === data.correctAnswer
-
-        const demoResponse = {
-          success: isCorrect,
-          result: {
-            quizId: data.quizId,
-            selectedAnswer: data.selectedAnswer,
-            correctAnswer: data.correctAnswer,
-            isCorrect: isCorrect,
-            timestamp: Date.now(),
-            processingTime: Math.random() * 500 + 500 // 500-1000ms
-          },
-          message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
-        }
-
-        setLastResponse(demoResponse)
-        return demoResponse
-
-      } catch (err) {
-        const errorMessage = err.message || 'Demo 모드 요청 중 오류가 발생했습니다.'
-        setError(errorMessage)
-        throw err
-      } finally {
-        setIsLoading(false)
+      // clientToken에 정답 정보를 포함 (정답 검증용)
+      const demoResponse = {
+        clientToken: `demo-token-${Date.now()}-${quiz.answer}`,
+        imageUrl: getQuizImagePath(quiz.image_url),
+        prompt: quiz.prompt,
+        options: options
       }
+
+      setLastResponse(demoResponse)
+      return demoResponse
     }
 
     if (!apiKey) {
       throw new Error('API 키가 필요합니다.')
     }
 
-    if (!isConnected) {
-      throw new Error('API 서버에 연결할 수 없습니다.')
-    }
-
     setIsLoading(true)
     setError(null)
 
     try {
-      // 이미지 데이터 처리
-      const processedData = {
-        ...data,
-        images: data.images?.map((imageData, index) => ({
-          id: `image_${index}`,
-          data: imageData,
-          type: 'base64'
-        })) || [],
-        timestamp: Date.now(),
-        version: '1.0.0'
-      }
-
-      const response = await fetch(`${endpoint}/process`, {
+      const response = await fetch(`${endpoint}/api/captcha/problem`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(processedData)
+          'Accept': 'application/json',
+          'X-Api-Key': sanitizeHeaderValue(apiKey)
+        }
       })
 
       if (!response.ok) {
@@ -130,47 +63,45 @@ export const useScratchaAPI = ({
       }
 
       const result = await response.json()
+
+      // API 응답에 clientToken이 포함되어 있으므로 그대로 반환
       setLastResponse(result)
       return result
 
     } catch (err) {
-      const errorMessage = err.message || 'API 요청 중 오류가 발생했습니다.'
+      const errorMessage = err.message || '캡차 문제 요청 중 오류가 발생했습니다.'
       setError(errorMessage)
       throw err
     } finally {
       setIsLoading(false)
     }
-  }, [apiKey, endpoint, isConnected, mode])
+  }, [apiKey, endpoint, mode])
 
-  // 텍스트 전용 요청
-  const sendTextRequest = useCallback(async (text, options = {}) => {
-    return sendRequest({
-      text,
-      type: 'text',
-      ...options
-    })
-  }, [sendRequest])
+  // 정답 검증 요청
+  const verifyAnswer = useCallback(async (clientToken, selectedAnswer) => {
+    if (mode === 'demo') {
+      setError(null)
 
-  // 배열 데이터 요청
-  const sendArrayRequest = useCallback(async (arrayData, options = {}) => {
-    return sendRequest({
-      array: arrayData,
-      type: 'array',
-      ...options
-    })
-  }, [sendRequest])
+      // 데모 모드에서 실제 정답 검증 (clientToken에서 정답 추출)
+      const correctAnswer = clientToken.split('-').pop() // clientToken의 마지막 부분이 정답
+      const isCorrect = selectedAnswer === correctAnswer
 
-  // 이미지 전용 요청
-  const sendImageRequest = useCallback(async (images, options = {}) => {
-    return sendRequest({
-      images,
-      type: 'image',
-      ...options
-    })
-  }, [sendRequest])
+      const demoResponse = {
+        success: isCorrect,
+        result: {
+          clientToken: clientToken,
+          selectedAnswer: selectedAnswer,
+          isCorrect: isCorrect,
+          timestamp: Date.now(),
+          processingTime: Math.random() * 500 + 500 // 500-1000ms
+        },
+        message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
+      }
 
-  // 배치 요청 (여러 요청을 한번에 처리)
-  const sendBatchRequest = useCallback(async (requests) => {
+      setLastResponse(demoResponse)
+      return demoResponse
+    }
+
     if (!apiKey) {
       throw new Error('API 키가 필요합니다.')
     }
@@ -179,15 +110,15 @@ export const useScratchaAPI = ({
     setError(null)
 
     try {
-      const response = await fetch(`${endpoint}/batch`, {
+      const response = await fetch(`${endpoint}/api/captcha/verify`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json',
+          'X-Client-Token': sanitizeHeaderValue(clientToken),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          requests,
-          timestamp: Date.now()
+          answer: selectedAnswer
         })
       })
 
@@ -197,37 +128,40 @@ export const useScratchaAPI = ({
       }
 
       const result = await response.json()
-      setLastResponse(result)
-      return result
+
+      // API 응답 형식을 SDK 형식으로 변환
+      const convertedResult = {
+        success: result.result === 'success',
+        result: {
+          clientToken: clientToken,
+          selectedAnswer: selectedAnswer,
+          isCorrect: result.result === 'success',
+          timestamp: Date.now(),
+          processingTime: Math.random() * 500 + 500
+        },
+        message: result.message
+      }
+
+      setLastResponse(convertedResult)
+      return convertedResult
 
     } catch (err) {
-      const errorMessage = err.message || '배치 요청 중 오류가 발생했습니다.'
+      const errorMessage = err.message || '정답 검증 중 오류가 발생했습니다.'
       setError(errorMessage)
       throw err
     } finally {
       setIsLoading(false)
     }
-  }, [apiKey, endpoint])
-
-  // 연결 재시도
-  const retryConnection = useCallback(() => {
-    checkConnection()
-  }, [checkConnection])
+  }, [apiKey, endpoint, mode])
 
   return {
     // 상태
-    isConnected,
     isLoading,
     lastResponse,
     error,
 
     // 메서드
-    sendRequest,
-    sendTextRequest,
-    sendArrayRequest,
-    sendImageRequest,
-    sendBatchRequest,
-    retryConnection,
-    checkConnection
+    getCaptchaProblem,
+    verifyAnswer
   }
 }

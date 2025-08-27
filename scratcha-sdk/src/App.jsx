@@ -3,7 +3,7 @@ import ScratchaWidget from './components/ScratchaWidget'
 import './index.css'
 
 function App() {
-    const [mode, setMode] = useState('demo')
+    const [mode, setMode] = useState('normal')
 
     return (
         <div className="min-h-screen bg-gray-100 p-8">
@@ -21,7 +21,7 @@ function App() {
                     >
                         Demo 모드
                     </button>
-                    <button
+                    {/* <button
                         onClick={() => setMode('normal')}
                         className={`px-4 py-2 rounded-lg font-medium ${mode === 'normal'
                             ? 'bg-blue-500 text-white'
@@ -29,15 +29,15 @@ function App() {
                             }`}
                     >
                         Normal 모드
-                    </button>
+                    </button> */}
                 </div>
 
                 {/* SDK 위젯 */}
                 <div className="bg-white rounded-lg shadow-lg p-6">
                     <ScratchaWidget
                         mode={mode}
-                        apiKey={mode === 'normal' ? 'your-api-key-here' : undefined}
-                        endpoint="https://api.scratcha.com"
+                        apiKey={mode === 'normal' ? 'your api key' : undefined}
+                        endpoint="https://api.scratcha.cloud"
                     />
                 </div>
             </div>

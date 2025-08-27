@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Canvas from './Canvas'
 import Button from './Button'
 import { useScratchaAPI } from '../hooks/useScratchaAPI'
-import { getRandomQuiz, generateQuizAnswerOptions } from '../utils/captchaData'
-import { getCoverImagePath, getQuizImagePath, getLogoImagePath } from '../utils/imageUtils'
+import { getCoverImagePath, getLogoImagePath } from '../utils/imageUtils'
 
 const ScratchaWidget = ({
     apiKey,
@@ -16,54 +15,114 @@ const ScratchaWidget = ({
     const [showResult, setShowResult] = useState(false)
     const [result, setResult] = useState(null)
     const [answerOptions, setAnswerOptions] = useState([])
-    const [currentQuiz, setCurrentQuiz] = useState(null)
-    const [correctAnswer, setCorrectAnswer] = useState('')
+    const [clientToken, setClientToken] = useState('')
+    const [isImageLoading, setIsImageLoading] = useState(false)
 
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
 
-    const { isLoading, sendRequest } = useScratchaAPI({
+    const { isLoading, getCaptchaProblem, verifyAnswer } = useScratchaAPI({
         apiKey,
         endpoint,
         mode
     })
 
-    // 퀴즈 초기화
-    const initializeQuiz = () => {
-        const quiz = getRandomQuiz()
-        const options = generateQuizAnswerOptions(quiz)
+    // 캡차 문제 초기화
+    const initializeProblem = useCallback(async () => {
+        const startTime = Date.now()
+        console.log('ScratchaWidget: 캡차 문제 초기화 시작')
 
-        setCurrentQuiz(quiz)
-        setCorrectAnswer(quiz.answer)
-        setAnswerOptions(options)
+        try {
+            // normal 모드에서만 이미지 로딩 상태 표시
+            if (mode === 'normal') {
+                setIsImageLoading(true)
+            }
 
-        // 커버 이미지 먼저 로드, 완료 후 실제 이미지 로드
-        if (canvas1Ref.current && canvas2Ref.current) {
-            canvas1Ref.current.loadImage(getCoverImagePath(), true, () => {
-                // 커버 이미지 로딩 완료 후 실제 이미지 로드
-                canvas2Ref.current.loadImage(getQuizImagePath(quiz.image_url), false)
+            const problemData = await getCaptchaProblem()
+            const apiLoadTime = Date.now() - startTime
+            console.log('ScratchaWidget: API 응답 수신 완료', {
+                loadTime: `${apiLoadTime}ms`,
+                clientToken: problemData.clientToken,
+                imageUrl: problemData.imageUrl,
+                options: problemData.options,
+                mode: mode
             })
-        }
-    }
 
-    // 컴포넌트 마운트 시 퀴즈 초기화
+            setClientToken(problemData.clientToken)
+            setAnswerOptions(problemData.options)
+
+            // 커버 이미지 먼저 로드, 완료 후 실제 이미지 로드
+            if (canvas1Ref.current && canvas2Ref.current) {
+                const coverStartTime = Date.now()
+                canvas1Ref.current.loadImage(getCoverImagePath(), true, () => {
+                    const coverLoadTime = Date.now() - coverStartTime
+                    console.log('ScratchaWidget: 커버 이미지 로딩 완료', {
+                        loadTime: `${coverLoadTime}ms`,
+                        imagePath: getCoverImagePath()
+                    })
+
+                    // 커버 이미지 로딩 완료 후 실제 이미지 로드
+                    const mainImageStartTime = Date.now()
+                    canvas2Ref.current.loadImage(problemData.imageUrl, false, () => {
+                        const mainImageLoadTime = Date.now() - mainImageStartTime
+                        const totalLoadTime = Date.now() - startTime
+                        console.log('ScratchaWidget: 메인 이미지 로딩 완료', {
+                            loadTime: `${mainImageLoadTime}ms`,
+                            totalLoadTime: `${totalLoadTime}ms`,
+                            imageUrl: problemData.imageUrl
+                        })
+
+                        // 모든 이미지 로딩 완료
+                        if (mode === 'normal') {
+                            setIsImageLoading(false)
+                        }
+                    })
+                })
+            }
+        } catch (err) {
+            const errorTime = Date.now() - startTime
+            console.error('ScratchaWidget: 캡차 문제 로드 실패', {
+                error: err.message,
+                loadTime: `${errorTime}ms`,
+                mode: mode
+            })
+            if (mode === 'normal') {
+                setIsImageLoading(false)
+            }
+        }
+    }, [mode, getCaptchaProblem])
+
+    // 컴포넌트 마운트 시 캡차 문제 초기화
     useEffect(() => {
         const timer = setTimeout(() => {
-            initializeQuiz()
+            initializeProblem()
         }, 100)
         return () => clearTimeout(timer)
-    }, [])
+    }, [initializeProblem])
 
     const handleAnswerSelect = async (answer) => {
         if (isLoading || result) return
 
+        const startTime = Date.now()
+        console.log('ScratchaWidget: 정답 검증 시작', {
+            selectedAnswer: answer,
+            clientToken: clientToken,
+            mode: mode
+        })
+
         setSelectedAnswer(answer)
 
         try {
-            const response = await sendRequest({
-                quizId: currentQuiz.id,
+            const response = await verifyAnswer(clientToken, answer)
+            const verificationTime = Date.now() - startTime
+
+            console.log('ScratchaWidget: 정답 검증 완료', {
+                success: response.success,
+                loadTime: `${verificationTime}ms`,
                 selectedAnswer: answer,
-                correctAnswer: correctAnswer
+                result: response.result,
+                message: response.message,
+                mode: mode
             })
 
             if (response.success) {
@@ -83,6 +142,13 @@ const ScratchaWidget = ({
                 }, 1000)
             }
         } catch (err) {
+            const errorTime = Date.now() - startTime
+            console.error('ScratchaWidget: 정답 검증 실패', {
+                error: err.message,
+                loadTime: `${errorTime}ms`,
+                selectedAnswer: answer,
+                mode: mode
+            })
             setShowResult(true)
             onError?.(err)
         }
@@ -101,18 +167,32 @@ const ScratchaWidget = ({
             canvas2Ref.current.clear()
         }
 
-        // 새로운 퀴즈 로드
-        initializeQuiz()
+        // 새로운 캡차 문제 로드 (약간의 지연을 두어 버튼 상태가 해제되도록 함)
+        setTimeout(() => {
+            initializeProblem()
+        }, 50)
     }
+
+    // 결과 표시 후 자동으로 선택 상태 초기화
+    useEffect(() => {
+        if (showResult) {
+            const timer = setTimeout(() => {
+                setSelectedAnswer(null)
+            }, 100) // 결과 표시 후 100ms 후에 선택 상태 초기화
+            return () => clearTimeout(timer)
+        }
+    }, [showResult])
 
     return (
         <div className="scratcha-widget" data-role="scratcha-container">
             {/* 로딩 오버레이 */}
-            {isLoading && (
+            {(isLoading || (mode === 'normal' && isImageLoading)) && (
                 <div className="overlay">
                     <div className="overlay-content">
                         <div className="loading-spinner"></div>
-                        <p className="loading-text">처리 중...</p>
+                        <p className="loading-text">
+                            {isLoading ? '처리 중...' : '이미지 로딩 중...'}
+                        </p>
                     </div>
                 </div>
             )}
@@ -179,7 +259,7 @@ const ScratchaWidget = ({
                     {/* 새로고침 버튼 */}
                     <button
                         onClick={handleReset}
-                        disabled={isLoading}
+                        disabled={isLoading || (mode === 'normal' && isImageLoading)}
                         className="refresh-button"
                         data-role="refresh-button"
                     >
@@ -196,7 +276,7 @@ const ScratchaWidget = ({
                     <button
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={isLoading || result}
+                        disabled={isLoading || result || (mode === 'normal' && isImageLoading)}
                         className={`answer-button ${selectedAnswer === option ? 'selected' : ''}`}
                         data-role={`answer-${index + 1}`}
                         data-answer={option}
