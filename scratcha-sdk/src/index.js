@@ -128,6 +128,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
       }
 
       .scratcha-widget .instruction-text {

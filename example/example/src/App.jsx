@@ -7,7 +7,7 @@ function App() {
 
   const handleSuccess = (result) => {
     console.log('성공:', result)
-    alert(`성공! 선택한 답안: ${result.selectedAnswer}`)
+    alert(`성공! 선택한 답안: ${result.result.selectedAnswer}`)
   }
 
   const handleError = (error) => {
