@@ -1,26 +1,9 @@
 // CSS 스타일을 JavaScript에 인라인으로 주입
 (function () {
-    if (typeof document !== 'undefined') {
-        const style = document.createElement('style');
-        style.textContent = `
-      /* CSS 초기화 및 전역 스타일 */
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-
-      /* 모든 버튼 요소 초기화 */
-      button {
-        margin: 0;
-        padding: 0;
-        border: none;
-        background: none;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      /* Animations */
+  if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Animations - 전역에서 필요 */
       @keyframes spin {
         0% {
           transform: rotate(0);
@@ -40,16 +23,12 @@
         }
       }
 
-      .animate-spin {
-        animation: spin 1s linear infinite;
-      }
-
-      .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-      }
-
-      /* Main widget styles */
+      /* SDK 컴포넌트에만 적용되는 스타일 */
       .scratcha-widget {
+        /* SDK 내부 요소들에 대한 초기화 */
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
         position: relative;
         width: 340px;
         height: 600px;
@@ -60,6 +39,25 @@
         color: #111827;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
           0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+
+      /* SDK 내부 버튼만 초기화 */
+      .scratcha-widget button {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: none;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      /* SDK 내부 요소들에만 적용되는 유틸리티 클래스 */
+      .scratcha-widget .animate-spin {
+        animation: spin 1s linear infinite;
+      }
+
+      .scratcha-widget .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
 
       .scratcha-widget .logo-container {
@@ -285,8 +283,8 @@
         font-weight: 500;
       }
 
-      /* Button component styles */
-      .scratcha-button {
+      /* Button component styles - SDK 내부에서만 사용 */
+      .scratcha-widget .scratcha-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -298,135 +296,135 @@
         outline: none;
       }
 
-      .scratcha-button:focus-visible {
+      .scratcha-widget .scratcha-button:focus-visible {
         outline: 2px solid transparent;
         outline-offset: 2px;
         box-shadow: 0 0 0 2px #3b82f6;
       }
 
-      .scratcha-button:disabled {
+      .scratcha-widget .scratcha-button:disabled {
         opacity: 0.5;
         pointer-events: none;
       }
 
-      .scratcha-button.primary {
+      .scratcha-widget .scratcha-button.primary {
         background-color: #2563eb;
         color: #fff;
       }
 
-      .scratcha-button.primary:hover {
+      .scratcha-widget .scratcha-button.primary:hover {
         background-color: #1d4ed8;
       }
 
-      .scratcha-button.secondary {
+      .scratcha-widget .scratcha-button.secondary {
         background-color: #e5e7eb;
         color: #111827;
       }
 
-      .scratcha-button.secondary:hover {
+      .scratcha-widget .scratcha-button.secondary:hover {
         background-color: #d1d5db;
       }
 
-      .scratcha-button.outline {
+      .scratcha-widget .scratcha-button.outline {
         border: 1px solid #d1d5db;
         background-color: #fff;
         color: #374151;
       }
 
-      .scratcha-button.outline:hover {
+      .scratcha-widget .scratcha-button.outline:hover {
         background-color: #f9fafb;
       }
 
-      .scratcha-button.ghost {
+      .scratcha-widget .scratcha-button.ghost {
         color: #374151;
       }
 
-      .scratcha-button.ghost:hover {
+      .scratcha-widget .scratcha-button.ghost:hover {
         background-color: #f3f4f6;
       }
 
-      .scratcha-button.destructive {
+      .scratcha-widget .scratcha-button.destructive {
         background-color: #dc2626;
         color: #fff;
       }
 
-      .scratcha-button.destructive:hover {
+      .scratcha-widget .scratcha-button.destructive:hover {
         background-color: #b91c1c;
       }
 
-      .scratcha-button.sm {
+      .scratcha-widget .scratcha-button.sm {
         height: 32px;
         padding: 0 12px;
         font-size: 14px;
       }
 
-      .scratcha-button.medium {
+      .scratcha-widget .scratcha-button.medium {
         height: 40px;
         padding: 0 16px;
         font-size: 14px;
       }
 
-      .scratcha-button.lg {
+      .scratcha-widget .scratcha-button.lg {
         height: 48px;
         padding: 0 24px;
         font-size: 16px;
       }
 
-      .scratcha-button .loading-icon {
+      .scratcha-widget .scratcha-button .loading-icon {
         animation: spin 1s linear infinite;
         margin-right: 8px;
         width: 16px;
         height: 16px;
       }
 
-      /* Text display component styles */
-      .text-display {
+      /* Text display component styles - SDK 내부에서만 사용 */
+      .scratcha-widget .text-display {
         color: #111827;
       }
 
-      .text-display .data-item {
+      .scratcha-widget .text-display .data-item {
         margin-bottom: 8px;
       }
 
-      .text-display .data-label {
+      .scratcha-widget .text-display .data-label {
         font-weight: 500;
         color: #111827;
       }
 
-      .text-display .data-value {
+      .scratcha-widget .text-display .data-value {
         color: #111827;
       }
 
-      .text-display .data-value.boolean {
+      .scratcha-widget .text-display .data-value.boolean {
         padding: 4px 8px;
         border-radius: 4px;
         font-size: 12px;
       }
 
-      .text-display .data-value.boolean.true {
+      .scratcha-widget .text-display .data-value.boolean.true {
         background-color: #dcfce7;
         color: #111827;
       }
 
-      .text-display .data-value.boolean.false {
+      .scratcha-widget .text-display .data-value.boolean.false {
         background-color: #fee2e2;
         color: #111827;
       }
 
-      .text-display .data-container {
+      .scratcha-widget .text-display .data-container {
         margin-left: 16px;
         margin-top: 4px;
       }
 
-      .text-display .array-item {
+      .scratcha-widget .text-display .array-item {
         margin-bottom: 4px;
       }
 
-      .text-display .array-index {
+      .scratcha-widget .text-display .array-index {
         color: #111827;
       }
 
-      .text-display .json-display {
+      .scratcha-widget .text-display .json-display {
         font-size: 12px;
         background-color: #f3f4f6;
         padding: 8px;
@@ -437,14 +435,14 @@
         white-space: pre-wrap;
       }
 
-      .text-display .data-wrapper {
+      .scratcha-widget .text-display .data-wrapper {
         background-color: #f9fafb;
         padding: 12px;
         border-radius: 4px;
         border: 1px solid #e5e7eb;
       }
 
-      .text-display .expand-button {
+      .scratcha-widget .text-display .expand-button {
         color: #111827;
         font-size: 14px;
         margin-top: 8px;
@@ -454,171 +452,171 @@
         padding: 0;
       }
 
-      .text-display .expand-button:hover {
+      .scratcha-widget .text-display .expand-button:hover {
         color: #374151;
       }
 
-      .text-display .no-data {
+      .scratcha-widget .text-display .no-data {
         color: #111827;
         font-style: italic;
       }
 
-      /* Utility classes */
-      .flex {
+      /* SDK 내부에서만 사용되는 유틸리티 클래스들 */
+      .scratcha-widget .flex {
         display: flex;
       }
 
-      .items-center {
+      .scratcha-widget .items-center {
         align-items: center;
       }
 
-      .justify-center {
+      .scratcha-widget .justify-center {
         justify-content: center;
       }
 
-      .text-center {
+      .scratcha-widget .text-center {
         text-align: center;
       }
 
-      .w-full {
+      .scratcha-widget .w-full {
         width: 100%;
       }
 
-      .h-auto {
+      .scratcha-widget .h-auto {
         height: auto;
       }
 
-      .mb-2 {
+      .scratcha-widget .mb-2 {
         margin-bottom: 8px;
       }
 
-      .mb-3 {
+      .scratcha-widget .mb-3 {
         margin-bottom: 12px;
       }
 
-      .mb-4 {
+      .scratcha-widget .mb-4 {
         margin-bottom: 16px;
       }
 
-      .mt-1 {
+      .scratcha-widget .mt-1 {
         margin-top: 4px;
       }
 
-      .mt-2 {
+      .scratcha-widget .mt-2 {
         margin-top: 8px;
       }
 
-      .ml-4 {
+      .scratcha-widget .ml-4 {
         margin-left: 16px;
       }
 
-      .gap-2 {
+      .scratcha-widget .gap-2 {
         gap: 8px;
       }
 
-      .gap-3 {
+      .scratcha-widget .gap-3 {
         gap: 12px;
       }
 
-      .space-y-2 > * + * {
+      .scratcha-widget .space-y-2 > * + * {
         margin-top: 8px;
       }
 
-      .space-y-3 > * + * {
+      .scratcha-widget .space-y-3 > * + * {
         margin-top: 12px;
       }
 
-      .rounded {
+      .scratcha-widget .rounded {
         border-radius: 4px;
       }
 
-      .rounded-lg {
+      .scratcha-widget .rounded-lg {
         border-radius: 8px;
       }
 
-      .rounded-full {
+      .scratcha-widget .rounded-full {
         border-radius: 9999px;
       }
 
-      .border {
+      .scratcha-widget .border {
         border: 1px solid #e5e7eb;
       }
 
-      .border-gray-300 {
+      .scratcha-widget .border-gray-300 {
         border-color: #d1d5db;
       }
 
-      .bg-white {
+      .scratcha-widget .bg-white {
         background-color: #fff;
       }
 
-      .bg-gray-50 {
+      .scratcha-widget .bg-gray-50 {
         background-color: #f9fafb;
       }
 
-      .bg-gray-100 {
+      .scratcha-widget .bg-gray-100 {
         background-color: #f3f4f6;
       }
 
-      .text-black {
+      .scratcha-widget .text-black {
         color: #111827;
       }
 
-      .text-sm {
+      .scratcha-widget .text-sm {
         font-size: 14px;
       }
 
-      .text-xs {
+      .scratcha-widget .text-xs {
         font-size: 12px;
       }
 
-      .font-medium {
+      .scratcha-widget .font-medium {
         font-weight: 500;
       }
 
-      .font-bold {
+      .scratcha-widget .font-bold {
         font-weight: 700;
       }
 
-      .italic {
+      .scratcha-widget .italic {
         font-style: italic;
       }
 
-      .whitespace-pre-wrap {
+      .scratcha-widget .whitespace-pre-wrap {
         white-space: pre-wrap;
       }
 
-      .overflow-x-auto {
+      .scratcha-widget .overflow-x-auto {
         overflow-x: auto;
       }
 
-      .cursor-pointer {
+      .scratcha-widget .cursor-pointer {
         cursor: pointer;
       }
 
-      .cursor-not-allowed {
+      .scratcha-widget .cursor-not-allowed {
         cursor: not-allowed;
       }
 
-      .transition-colors {
+      .scratcha-widget .transition-colors {
         transition: color 0.2s ease, background-color 0.2s ease,
           border-color 0.2s ease;
       }
 
-      .opacity-50 {
+      .scratcha-widget .opacity-50 {
         opacity: 0.5;
       }
 
-      .opacity-90 {
+      .scratcha-widget .opacity-90 {
         opacity: 0.9;
       }
 
-      .shadow-sm {
+      .scratcha-widget .shadow-sm {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       }
     `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 })();
 
 // Main SDK class
