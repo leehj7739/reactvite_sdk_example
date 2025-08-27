@@ -39,10 +39,8 @@ function App() {
         <div className="widget-container">
           <ScratchaWidget
             mode={mode}
-            theme="light"
             onSuccess={handleSuccess}
             onError={handleError}
-            className="scratcha-widget"
           />
         </div>
       </main>

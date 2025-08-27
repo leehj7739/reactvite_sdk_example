@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ScratchaWidget from './components/ScratchaWidget'
-import './App.css'
+import './index.css'
 
 function App() {
     const [mode, setMode] = useState('demo')

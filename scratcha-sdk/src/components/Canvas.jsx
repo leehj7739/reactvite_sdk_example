@@ -3,7 +3,6 @@ import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } f
 const Canvas = forwardRef(({
   width = 500,
   height = 500,
-  className = '',
   onImageLoad,
   enableScratch = false
 }, ref) => {
@@ -149,17 +148,13 @@ const Canvas = forwardRef(({
     setIsDrawing(false)
   }
 
-
-
-
-
   return (
-    <div className={`canvas-container ${className}`}>
+    <div className="canvas-container">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
-        className={`border border-gray-300 rounded ${enableScratch ? 'cursor-crosshair' : ''}`}
+        className={enableScratch ? 'scratch-enabled' : ''}
         onMouseDown={enableScratch ? startScratching : undefined}
         onMouseMove={enableScratch ? continueScratching : undefined}
         onMouseUp={enableScratch ? stopScratching : undefined}

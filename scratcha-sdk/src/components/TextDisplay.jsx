@@ -1,32 +1,32 @@
 import React, { useState } from 'react'
 
-const TextDisplay = ({ data, className = '' }) => {
+const TextDisplay = ({ data }) => {
   const [expanded, setExpanded] = useState(false)
 
   const renderValue = (value, key) => {
     if (typeof value === 'string') {
       return (
-        <div key={key} className="mb-2">
-          <span className="font-medium text-black">{key}: </span>
-          <span className="text-black">{value}</span>
+        <div key={key} className="data-item">
+          <span className="data-label">{key}: </span>
+          <span className="data-value">{value}</span>
         </div>
       )
     }
 
     if (typeof value === 'number') {
       return (
-        <div key={key} className="mb-2">
-          <span className="font-medium text-black">{key}: </span>
-          <span className="text-black">{value}</span>
+        <div key={key} className="data-item">
+          <span className="data-label">{key}: </span>
+          <span className="data-value">{value}</span>
         </div>
       )
     }
 
     if (typeof value === 'boolean') {
       return (
-        <div key={key} className="mb-2">
-          <span className="font-medium text-black">{key}: </span>
-          <span className={`px-2 py-1 rounded text-xs ${value ? 'bg-green-100 text-black' : 'bg-red-100 text-black'}`}>
+        <div key={key} className="data-item">
+          <span className="data-label">{key}: </span>
+          <span className={`data-value boolean ${value ? 'true' : 'false'}`}>
             {value ? 'True' : 'False'}
           </span>
         </div>
@@ -35,18 +35,18 @@ const TextDisplay = ({ data, className = '' }) => {
 
     if (Array.isArray(value)) {
       return (
-        <div key={key} className="mb-3">
-          <span className="font-medium text-black">{key}: </span>
-          <div className="ml-4 mt-1">
+        <div key={key} className="data-item">
+          <span className="data-label">{key}: </span>
+          <div className="data-container">
             {value.map((item, index) => (
-              <div key={index} className="mb-1">
-                <span className="text-black">[{index}]: </span>
+              <div key={index} className="array-item">
+                <span className="array-index">[{index}]: </span>
                 {typeof item === 'object' ? (
-                  <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-x-auto text-black">
+                  <pre className="json-display">
                     {JSON.stringify(item, null, 2)}
                   </pre>
                 ) : (
-                  <span className="text-black">{String(item)}</span>
+                  <span className="data-value">{String(item)}</span>
                 )}
               </div>
             ))}
@@ -57,9 +57,9 @@ const TextDisplay = ({ data, className = '' }) => {
 
     if (typeof value === 'object' && value !== null) {
       return (
-        <div key={key} className="mb-3">
-          <span className="font-medium text-black">{key}: </span>
-          <div className="ml-4 mt-1">
+        <div key={key} className="data-item">
+          <span className="data-label">{key}: </span>
+          <div className="data-container">
             {Object.entries(value).map(([subKey, subValue]) =>
               renderValue(subValue, subKey)
             )}
@@ -69,22 +69,22 @@ const TextDisplay = ({ data, className = '' }) => {
     }
 
     return (
-      <div key={key} className="mb-2">
-        <span className="font-medium text-black">{key}: </span>
-        <span className="text-black italic">null/undefined</span>
+      <div key={key} className="data-item">
+        <span className="data-label">{key}: </span>
+        <span className="data-value italic">null/undefined</span>
       </div>
     )
   }
 
   const renderData = () => {
     if (!data) {
-      return <div className="text-black italic">데이터가 없습니다.</div>
+      return <div className="no-data">데이터가 없습니다.</div>
     }
 
     if (typeof data === 'string') {
       return (
-        <div className="bg-gray-50 p-3 rounded border">
-          <pre className="whitespace-pre-wrap text-sm text-black">{data}</pre>
+        <div className="data-wrapper">
+          <pre className="whitespace-pre-wrap">{data}</pre>
         </div>
       )
     }
@@ -95,12 +95,12 @@ const TextDisplay = ({ data, className = '' }) => {
 
       return (
         <div className="space-y-2">
-          <div className="bg-gray-50 p-3 rounded border">
+          <div className="data-wrapper">
             {displayEntries.map(([key, value]) => renderValue(value, key))}
             {entries.length > 5 && (
               <button
                 onClick={() => setExpanded(!expanded)}
-                className="text-black hover:text-gray-700 text-sm mt-2"
+                className="expand-button"
               >
                 {expanded ? '접기' : `${entries.length - 5}개 더 보기`}
               </button>
@@ -111,14 +111,14 @@ const TextDisplay = ({ data, className = '' }) => {
     }
 
     return (
-      <div className="bg-gray-50 p-3 rounded border">
-        <span className="text-black">{String(data)}</span>
+      <div className="data-wrapper">
+        <span className="data-value">{String(data)}</span>
       </div>
     )
   }
 
   return (
-    <div className={`text-display ${className}`}>
+    <div className="text-display">
       {renderData()}
     </div>
   )

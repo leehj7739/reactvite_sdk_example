@@ -1,14 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
-import twToCssPlugin from './scripts/vite-tw-to-css.js'
 
 export default defineConfig({
   plugins: [
-    react(),
-    tailwindcss(),
-    twToCssPlugin()
+    react()
   ],
   build: {
     lib: {
@@ -25,7 +21,13 @@ export default defineConfig({
           'react-dom': 'ReactDOM'
         }
       }
-    }
+    },
+    cssCodeSplit: false,
+    cssMinify: false
+  },
+  css: {
+    modules: false,
+    postcss: null
   },
   resolve: {
     alias: {

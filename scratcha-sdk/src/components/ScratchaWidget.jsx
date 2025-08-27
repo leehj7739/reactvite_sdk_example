@@ -106,44 +106,30 @@ const ScratchaWidget = ({
     }
 
     return (
-        <div className="scratcha-widget" style={{
-            position: 'relative',
-            width: '340px',
-            height: '600px',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '20px',
-            backgroundColor: '#ffffff',
-            color: '#111827',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-        }}>
+        <div className="scratcha-widget">
             {/* 로딩 오버레이 */}
             {isLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 rounded-lg">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600 font-medium">처리 중...</p>
+                <div className="overlay">
+                    <div className="overlay-content">
+                        <div className="loading-spinner"></div>
+                        <p className="loading-text">처리 중...</p>
                     </div>
                 </div>
             )}
 
             {/* 결과 오버레이 */}
             {showResult && (
-                <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 rounded-lg">
-                    <div className="text-center">
+                <div className="overlay">
+                    <div className="overlay-content">
                         {result?.success ? (
                             <>
-                                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-white text-2xl font-bold">✓</span>
-                                </div>
-                                <p className="text-green-600 font-medium text-lg">정답입니다!</p>
+                                <div className="result-icon success">✓</div>
+                                <p className="result-text success">정답입니다!</p>
                             </>
                         ) : (
                             <>
-                                <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-white text-2xl font-bold">✗</span>
-                                </div>
-                                <p className="text-red-600 font-medium text-lg">오답입니다!</p>
+                                <div className="result-icon error">✗</div>
+                                <p className="result-text error">오답입니다!</p>
                             </>
                         )}
                     </div>
@@ -151,35 +137,32 @@ const ScratchaWidget = ({
             )}
 
             {/* 로고 */}
-            <div className="text-center mb-2 w-full">
-                <div className="flex items-center justify-center gap-2">
+            <div className="logo-container">
+                <div className="logo-wrapper">
                     <img
                         src={getLogoImagePath()}
                         alt="SCRATCHA"
-                        className="w-full h-auto"
                     />
                 </div>
             </div>
 
             {/* Canvas 영역 */}
-            <div className="relative mb-2 w-full">
-                <div className="flex justify-center">
-                    <div className="relative">
+            <div className="canvas-area">
+                <div className="canvas-wrapper">
+                    <div className="canvas-container">
                         {/* 실제 이미지 캔버스 (배경) */}
                         <Canvas
                             ref={canvas2Ref}
                             width={300}
                             height={300}
-                            className="border border-gray-300 rounded-lg shadow-sm"
                         />
 
                         {/* 커버 캔버스 (위에 겹쳐서 표시) */}
-                        <div className="absolute top-0 left-0 z-10">
+                        <div className="cover-canvas">
                             <Canvas
                                 ref={canvas1Ref}
                                 width={300}
                                 height={300}
-                                className="border border-gray-300 rounded-lg opacity-90 shadow-sm"
                                 enableScratch={true}
                             />
                         </div>
@@ -188,21 +171,18 @@ const ScratchaWidget = ({
             </div>
 
             {/* 지시문 */}
-            <div className="mb-2 w-full">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg py-2 px-4 w-full relative flex items-center justify-center">
-                    <p className="text-[10px] font-bold text-blue-800 text-center">
+            <div className="instruction-area">
+                <div className="instruction-container">
+                    <p className="instruction-text">
                         화면을 스크래치하여 정답을 선택해주세요.
                     </p>
                     {/* 새로고침 버튼 */}
                     <button
                         onClick={handleReset}
                         disabled={isLoading}
-                        className={`absolute top-1/2 right-3 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${isLoading
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-yellow-500 text-white hover:bg-yellow-600'
-                            }`}
+                        className="refresh-button"
                     >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
@@ -210,16 +190,13 @@ const ScratchaWidget = ({
             </div>
 
             {/* 정답 선택 버튼들 */}
-            <div className="grid grid-cols-2 gap-3 mb-2 w-full">
+            <div className="answer-buttons">
                 {answerOptions.map((option, index) => (
                     <button
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
                         disabled={isLoading || result}
-                        className={`px-4 py-3 rounded-lg font-bold text-sm transition-colors w-full ${selectedAnswer === option
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-yellow-500 text-white hover:bg-yellow-600'
-                            } ${isLoading || result ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`answer-button ${selectedAnswer === option ? 'selected' : ''}`}
                     >
                         {option}
                     </button>
