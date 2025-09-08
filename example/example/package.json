@@ -13,7 +13,7 @@
     "@tailwindcss/vite": "^4.1.12",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "scratcha-sdk": "^2.0.9",
+    "scratcha-sdk": "^2.0.10",
     "tailwindcss": "^4.1.12"
   },
   "devDependencies": {

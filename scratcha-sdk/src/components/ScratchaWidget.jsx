@@ -164,7 +164,7 @@ const ScratchaWidget = ({
                 onError?.(response)
             }
 
-            // 데모 모드에서 1초 후 자동 새로고침 (autoReset이 true일 때만)
+            // 데모 모드에서만 1초 후 자동 새로고침 (autoReset이 true일 때만)
             if (mode === 'demo' && autoReset) {
                 setTimeout(() => {
                     handleReset()

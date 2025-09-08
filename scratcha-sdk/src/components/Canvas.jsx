@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState } from 'react'
+import React, { forwardRef, useImperativeHandle, useRef, useEffect, useState, useCallback } from 'react'
 
 const Canvas = forwardRef(({
   width = 500,
@@ -157,28 +157,34 @@ const Canvas = forwardRef(({
     }
   }))
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (canvas) {
-      const ctx = canvas.getContext('2d')
-      setContext(ctx)
-
-      // 기본 설정
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.strokeStyle = '#000000'
-      ctx.lineWidth = 2
-    }
-  }, [])
-
   // 스크래치 기능 관련 함수들
+  const getEventPos = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect()
+    let x, y
+
+    if (e.touches && e.touches.length > 0) {
+      // 터치 이벤트
+      x = e.touches[0].clientX - rect.left
+      y = e.touches[0].clientY - rect.top
+    } else {
+      // 마우스 이벤트
+      x = e.clientX - rect.left
+      y = e.clientY - rect.top
+    }
+
+    return { x, y }
+  }
+
   const startScratching = (e) => {
     if (!enableScratch || !context || !originalImage) return
 
+    // 마우스 이벤트인 경우에만 preventDefault 호출
+    if (!e.touches) {
+      e.preventDefault()
+    }
+
     setIsDrawing(true)
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const { x, y } = getEventPos(e)
     setLastX(x)
     setLastY(y)
     scratchAt(x, y)
@@ -196,7 +202,7 @@ const Canvas = forwardRef(({
     context.globalCompositeOperation = 'source-over'
   }
 
-  const scratchLine = (x1, y1, x2, y2) => {
+  const scratchLine = useCallback((x1, y1, x2, y2) => {
     if (!context || !originalImage) return
 
     const radius = 30
@@ -218,25 +224,92 @@ const Canvas = forwardRef(({
     }
 
     context.globalCompositeOperation = 'source-over'
-  }
+  }, [context, originalImage])
 
-  const continueScratching = (e) => {
+  const continueScratching = useCallback((e) => {
     if (!enableScratch || !isDrawing || !context) return
 
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    // 마우스 이벤트인 경우에만 preventDefault 호출
+    if (!e.touches) {
+      e.preventDefault()
+    }
 
-    // 이전 위치와 현재 위치 사이를 선으로 연결하여 부드러운 스크래치 효과
-    scratchLine(lastX, lastY, x, y)
+    const { x, y } = getEventPos(e)
+
+    // 캔버스 영역 내에서만 스크래치 처리
+    if (x >= 0 && x <= width && y >= 0 && y <= height) {
+      // 이전 위치와 현재 위치 사이를 선으로 연결하여 부드러운 스크래치 효과
+      scratchLine(lastX, lastY, x, y)
+    }
 
     setLastX(x)
     setLastY(y)
-  }
+  }, [enableScratch, isDrawing, context, width, height, lastX, lastY, scratchLine])
 
-  const stopScratching = () => {
+  const stopScratching = useCallback((e) => {
+    if (e && !e.touches) {
+      e.preventDefault()
+    }
     setIsDrawing(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (canvas) {
+      const ctx = canvas.getContext('2d')
+      setContext(ctx)
+
+      // 기본 설정
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = '#000000'
+      ctx.lineWidth = 2
+
+      // 터치 이벤트를 non-passive로 등록하여 preventDefault 사용 가능하게 함
+      if (enableScratch) {
+        const touchOptions = { passive: false }
+
+        canvas.addEventListener('touchstart', (e) => {
+          e.preventDefault()
+        }, touchOptions)
+
+        canvas.addEventListener('touchmove', (e) => {
+          e.preventDefault()
+        }, touchOptions)
+
+        canvas.addEventListener('touchend', (e) => {
+          e.preventDefault()
+        }, touchOptions)
+
+        canvas.addEventListener('touchcancel', (e) => {
+          e.preventDefault()
+        }, touchOptions)
+
+        // 전역 마우스 이벤트로 드래그 중 캔버스 밖으로 나가도 계속 드래그 가능하게 함
+        const handleGlobalMouseMove = (e) => {
+          if (isDrawing) {
+            continueScratching(e)
+          }
+        }
+
+        const handleGlobalMouseUp = (e) => {
+          if (isDrawing) {
+            stopScratching(e)
+          }
+        }
+
+        // 전역 이벤트 리스너 등록
+        document.addEventListener('mousemove', handleGlobalMouseMove)
+        document.addEventListener('mouseup', handleGlobalMouseUp)
+
+        // 클린업 함수
+        return () => {
+          document.removeEventListener('mousemove', handleGlobalMouseMove)
+          document.removeEventListener('mouseup', handleGlobalMouseUp)
+        }
+      }
+    }
+  }, [enableScratch, isDrawing, continueScratching, stopScratching])
 
   return (
     <div className="canvas-container">
@@ -246,9 +319,11 @@ const Canvas = forwardRef(({
         height={height}
         className={enableScratch ? 'scratch-enabled' : ''}
         onMouseDown={enableScratch ? startScratching : undefined}
-        onMouseMove={enableScratch ? continueScratching : undefined}
-        onMouseUp={enableScratch ? stopScratching : undefined}
-        onMouseLeave={enableScratch ? stopScratching : undefined}
+        onTouchStart={enableScratch ? startScratching : undefined}
+        onTouchMove={enableScratch ? continueScratching : undefined}
+        onTouchEnd={enableScratch ? stopScratching : undefined}
+        onTouchCancel={enableScratch ? stopScratching : undefined}
+        style={{ touchAction: 'none' }}
       />
     </div>
   )
