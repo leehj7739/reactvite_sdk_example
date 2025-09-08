@@ -89,7 +89,7 @@ function App() {
         {!isCaptchaCompleted && (
           <ScratchaWidget
             mode="normal"
-            apiKey="bef3173f0322a300a0e26c6bdcc379141fe7f5d628f97112f2f65a9115218651"
+            apiKey=""
             endpoint="https://api.scratcha.cloud"
             onSuccess={handleSuccess}
             onError={handleError}
