@@ -300,6 +300,73 @@ button {
   font-weight: 500;
 }
 
+/* API 에러 커버 오버레이 스타일 */
+.scratcha-widget .overlay.error-cover {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+}
+
+.scratcha-widget .overlay-content.error-content {
+  padding: 32px 24px;
+  max-width: 280px;
+  text-align: center;
+}
+
+.scratcha-widget .error-logo {
+  margin-bottom: 20px;
+}
+
+.scratcha-widget .error-logo img {
+  width: 120px;
+  height: auto;
+  max-height: 40px;
+  opacity: 0.8;
+}
+
+.scratcha-widget .error-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.scratcha-widget .error-message {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+.scratcha-widget .error-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.scratcha-widget .retry-button {
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  background-color: #eab308;
+  color: #fff;
+  min-width: 120px;
+}
+
+.scratcha-widget .retry-button:hover {
+  background-color: #ca8a04;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.scratcha-widget .retry-button:active {
+  background-color: #a16207;
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.2);
+}
+
 /* Button component styles */
 .scratcha-button {
   display: inline-flex;

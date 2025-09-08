@@ -9,7 +9,8 @@ const ScratchaWidget = ({
     endpoint,
     onSuccess,
     onError,
-    mode = 'normal' // 'demo' | 'normal'
+    mode = 'normal', // 'demo' | 'normal'
+    autoReset = true // 자동 리셋 여부
 }) => {
     const [selectedAnswer, setSelectedAnswer] = useState(null)
     const [showResult, setShowResult] = useState(false)
@@ -17,6 +18,8 @@ const ScratchaWidget = ({
     const [answerOptions, setAnswerOptions] = useState([])
     const [clientToken, setClientToken] = useState('')
     const [isImageLoading, setIsImageLoading] = useState(false)
+    const [apiError, setApiError] = useState(null)
+    const [showErrorCover, setShowErrorCover] = useState(false)
 
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
@@ -86,11 +89,19 @@ const ScratchaWidget = ({
                 loadTime: `${errorTime}ms`,
                 mode: mode
             })
+
+            // API 에러 상태 설정
+            setApiError(err)
+            setShowErrorCover(true)
+
             if (mode === 'normal') {
                 setIsImageLoading(false)
             }
+
+            // 에러 콜백 호출
+            onError?.(err)
         }
-    }, [mode, getCaptchaProblem])
+    }, [mode, getCaptchaProblem, onError])
 
     // 컴포넌트 마운트 시 및 mode 변경 시 캡차 문제 초기화
     useEffect(() => {
@@ -101,6 +112,8 @@ const ScratchaWidget = ({
         setAnswerOptions([])
         setClientToken('')
         setIsImageLoading(false)
+        setApiError(null)
+        setShowErrorCover(false)
 
         // Canvas 초기화
         if (canvas1Ref.current) {
@@ -151,8 +164,8 @@ const ScratchaWidget = ({
                 onError?.(response)
             }
 
-            // 데모 모드에서 1초 후 자동 새로고침
-            if (mode === 'demo') {
+            // 데모 모드에서 1초 후 자동 새로고침 (autoReset이 true일 때만)
+            if (mode === 'demo' && autoReset) {
                 setTimeout(() => {
                     handleReset()
                 }, 1000)
@@ -174,6 +187,8 @@ const ScratchaWidget = ({
         setSelectedAnswer(null)
         setShowResult(false)
         setResult(null)
+        setApiError(null)
+        setShowErrorCover(false)
 
         // Canvas 초기화
         if (canvas1Ref.current) {
@@ -189,6 +204,13 @@ const ScratchaWidget = ({
         }, 50)
     }
 
+    // API 에러 복구 시도
+    const handleRetry = () => {
+        setApiError(null)
+        setShowErrorCover(false)
+        initializeProblem()
+    }
+
     // 결과 표시 후 자동으로 선택 상태 초기화
     useEffect(() => {
         if (showResult) {
@@ -201,8 +223,41 @@ const ScratchaWidget = ({
 
     return (
         <div className="scratcha-widget" data-role="scratcha-container">
+            {/* API 에러 커버 오버레이 */}
+            {showErrorCover && (
+                <div className="overlay error-cover">
+                    <div className="overlay-content error-content">
+                        <div className="error-logo">
+                            <img
+                                src={getLogoImagePath()}
+                                alt="SCRATCHA"
+                            />
+                        </div>
+                        <h3 className="error-title">잠시만요!</h3>
+                        <p className="error-message">
+                            {apiError?.message?.includes('timeout')
+                                ? '연결 시간이 초과되었어요. 잠시 후 다시 시도해주세요.'
+                                : apiError?.message?.includes('network') || apiError?.message?.includes('fetch')
+                                    ? '네트워크 연결에 문제가 있어요. 인터넷 연결을 확인해주세요.'
+                                    : apiError?.message?.includes('unauthorized') || apiError?.message?.includes('401')
+                                        ? '인증에 문제가 있어요. 관리자에게 문의해주세요.'
+                                        : '서버와 연결하는데 문제가 있어요. 잠시 후 다시 시도해주세요.'
+                            }
+                        </p>
+                        <div className="error-actions">
+                            <button
+                                className="retry-button"
+                                onClick={handleRetry}
+                            >
+                                다시 시도
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* 로딩 오버레이 */}
-            {(isLoading || (mode === 'normal' && isImageLoading)) && (
+            {(isLoading || (mode === 'normal' && isImageLoading)) && !showErrorCover && (
                 <div className="overlay">
                     <div className="overlay-content">
                         <div className="loading-spinner"></div>

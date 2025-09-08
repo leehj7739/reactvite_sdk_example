@@ -3,17 +3,29 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
 }
 
-.App-header {
+/* 메인 페이지 스타일 */
+.main-page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.main-content {
   text-align: center;
-  padding: 2rem 1rem;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-.App-header h1 {
+.main-content h1 {
   margin: 0 0 1rem 0;
   color: white;
   font-size: 2.5rem;
@@ -21,17 +33,55 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.mode-selector {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
+.main-content p {
+  margin: 0 0 2rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  line-height: 1.6;
 }
 
-.mode-selector button {
-  padding: 0.75rem 1.5rem;
+.login-button {
+  padding: 1rem 2rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 25px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.login-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* 캡차 페이지 스타일 */
+.captcha-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+.captcha-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  padding: 0.5rem 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.1);
   color: white;
   font-weight: 600;
@@ -40,23 +90,18 @@
   backdrop-filter: blur(10px);
 }
 
-.mode-selector button:hover {
+.back-button:hover {
   background: rgba(255, 255, 255, 0.2);
   border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
-.mode-selector button.active {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.App-main {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.captcha-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .widget-container {
@@ -71,44 +116,209 @@
   height: 600px;
   max-width: 100%;
   max-height: 100vh;
+  margin: 0 auto;
 }
 
-.App-footer {
+/* 로그인 페이지 스타일 */
+.login-page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.login-content {
   text-align: center;
-  padding: 1.5rem;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-.App-footer p {
-  margin: 0.5rem 0;
+.login-content h1 {
+  margin: 0 0 1rem 0;
   color: white;
-  font-size: 0.9rem;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.App-footer strong {
-  color: #ffd700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+.login-content p {
+  margin: 0 0 1.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.user-info {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-info p {
+  margin: 0;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.logout-button {
+  padding: 1rem 2rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.modal-icon.success {
+  color: #10b981;
+}
+
+.modal-icon.failure {
+  color: #ef4444;
+}
+
+.modal-icon.error {
+  color: #f59e0b;
+}
+
+.modal-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.modal-message {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-button {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px;
+}
+
+.modal-button.success {
+  background: #10b981;
+  color: white;
+}
+
+.modal-button.success:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.modal-button.failure {
+  background: #ef4444;
+  color: white;
+}
+
+.modal-button.failure:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.modal-button.error {
+  background: #f59e0b;
+  color: white;
+}
+
+.modal-button.error:hover {
+  background: #d97706;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-  .App-header h1 {
+  .main-content h1,
+  .login-content h1 {
     font-size: 2rem;
   }
 
-  .mode-selector {
+  .captcha-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .back-button {
+    position: static;
+    margin-bottom: 1rem;
+  }
+
+  .captcha-header {
     flex-direction: column;
-    align-items: center;
-  }
-
-  .mode-selector button {
-    width: 200px;
-  }
-
-  .App-main {
-    padding: 0;
+    text-align: center;
   }
 
   .widget-container {
@@ -116,4 +326,45 @@
     width: 340px;
     height: 600px;
   }
+
+  .modal-content {
+    padding: 2rem;
+    margin: 1rem;
+  }
+
+  .modal-icon {
+    font-size: 3rem;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+}
+
+/* 캡차 완료 메시지 스타일 */
+.captcha-completed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: white;
+  border-radius: 20px;
+}
+
+.completed-message {
+  text-align: center;
+  padding: 2rem;
+}
+
+.completed-message h3 {
+  margin: 0 0 1rem 0;
+  color: #10b981;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.completed-message p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1rem;
 }
