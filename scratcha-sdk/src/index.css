@@ -117,11 +117,12 @@ button {
 }
 
 .scratcha-widget .instruction-container {
-  background-color: #eff6ff;
-  border: 1px solid #bfdbfe;
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
   border-radius: 8px;
   padding: 0;
   width: 100%;
+  height: auto;
   position: relative;
   display: flex;
   align-items: center;
@@ -132,7 +133,7 @@ button {
 .scratcha-widget .instruction-text {
   font-size: 10px;
   font-weight: 700;
-  color: #1e40af;
+  color: #1e3a8a;
   text-align: center;
 }
 
@@ -182,8 +183,8 @@ button {
 }
 
 .scratcha-widget .refresh-button:disabled {
-  background-color: #d1d5db;
-  color: #6b7280;
+  background-color: #9ca3af;
+  color: #ffffff;
   cursor: not-allowed;
 }
 
@@ -235,8 +236,10 @@ button {
 }
 
 .scratcha-widget .answer-button:disabled {
-  opacity: 0.5;
+  background-color: #9ca3af;
+  color: #ffffff;
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .scratcha-widget .overlay {
@@ -291,15 +294,15 @@ button {
 }
 
 .scratcha-widget .result-text.success {
-  color: #059669;
+  color: #047857;
 }
 
 .scratcha-widget .result-text.error {
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .scratcha-widget .loading-text {
-  color: #6b7280;
+  color: #374151;
   font-weight: 500;
 }
 
@@ -337,7 +340,7 @@ button {
 
 .scratcha-widget .error-message {
   font-size: 14px;
-  color: #6b7280;
+  color: #374151;
   line-height: 1.6;
   margin-bottom: 28px;
 }

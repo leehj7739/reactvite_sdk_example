@@ -227,7 +227,7 @@ const ScratchaWidget = ({
         return false
     }
 
-    const handleSelectStart = (e) => {
+    const handleMouseDown = (e) => {
         e.preventDefault()
         return false
     }
@@ -242,7 +242,7 @@ const ScratchaWidget = ({
             className="scratcha-widget"
             data-role="scratcha-container"
             onDragStart={handleDragStart}
-            onSelectStart={handleSelectStart}
+            onMouseDown={handleMouseDown}
             onContextMenu={handleContextMenu}
         >
             {/* API 에러 커버 오버레이 */}

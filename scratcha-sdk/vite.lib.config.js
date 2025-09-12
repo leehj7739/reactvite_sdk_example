@@ -4,7 +4,13 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [
-    react()
+    react({
+      babel: {
+        plugins: [
+          ['transform-remove-console', { exclude: ['error'] }]
+        ]
+      }
+    })
   ],
   build: {
     lib: {

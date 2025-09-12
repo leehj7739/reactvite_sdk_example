@@ -1,6 +1,6 @@
 {
   "name": "scratcha-sdk",
-  "version": "2.0.14",
+  "version": "2.0.19",
   "type": "module",
   "description": "Scratcha SDK for React applications with canvas, image processing, and API communication",
   "main": "dist/index.umd.cjs",
@@ -33,6 +33,7 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

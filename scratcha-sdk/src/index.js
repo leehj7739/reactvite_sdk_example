@@ -4,8 +4,8 @@
     // LCP 이미지 preload 실행
     import('./utils/imageAssets.js').then(({ preloadLCPImages }) => {
       preloadLCPImages();
-    }).catch(err => {
-      console.warn('LCP 이미지 preload 실패:', err);
+    }).catch(() => {
+      // LCP 이미지 preload 실패 시 조용히 처리
     });
 
     const style = document.createElement('style');

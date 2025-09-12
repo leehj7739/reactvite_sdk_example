@@ -38,7 +38,7 @@ export const getImageUrl = (imageKey) => {
         return IMAGE_ASSETS[imageKey];
     }
 
-    console.warn(`이미지를 찾을 수 없습니다: ${imageKey}`);
+    // 이미지를 찾을 수 없을 때 조용히 기본 로고 반환
     return IMAGE_ASSETS['default/logo']; // 기본 로고 반환
 };
 
@@ -77,9 +77,9 @@ export const preloadImages = async () => {
 
     try {
         await Promise.all(loadPromises);
-        console.log('모든 이미지가 성공적으로 로딩되었습니다.');
-    } catch (error) {
-        console.warn('일부 이미지 로딩에 실패했습니다:', error.message);
+        // 모든 이미지가 성공적으로 로딩됨
+    } catch {
+        // 일부 이미지 로딩 실패 시 조용히 처리
     }
 };
 
