@@ -221,8 +221,30 @@ const ScratchaWidget = ({
         }
     }, [showResult])
 
+    // SDK 내부 드래그 방지 이벤트 핸들러
+    const handleDragStart = (e) => {
+        e.preventDefault()
+        return false
+    }
+
+    const handleSelectStart = (e) => {
+        e.preventDefault()
+        return false
+    }
+
+    const handleContextMenu = (e) => {
+        e.preventDefault()
+        return false
+    }
+
     return (
-        <div className="scratcha-widget" data-role="scratcha-container">
+        <div
+            className="scratcha-widget"
+            data-role="scratcha-container"
+            onDragStart={handleDragStart}
+            onSelectStart={handleSelectStart}
+            onContextMenu={handleContextMenu}
+        >
             {/* API 에러 커버 오버레이 */}
             {showErrorCover && (
                 <div className="overlay error-cover">
@@ -231,6 +253,8 @@ const ScratchaWidget = ({
                             <img
                                 src={getLogoImagePath()}
                                 alt="SCRATCHA"
+                                draggable={false}
+                                onDragStart={handleDragStart}
                             />
                         </div>
                         <h3 className="error-title">잠시만요!</h3>
@@ -293,6 +317,8 @@ const ScratchaWidget = ({
                     <img
                         src={getLogoImagePath()}
                         alt="SCRATCHA"
+                        draggable={false}
+                        onDragStart={handleDragStart}
                     />
                 </div>
             </div>
@@ -333,8 +359,10 @@ const ScratchaWidget = ({
                         disabled={isLoading || (mode === 'normal' && isImageLoading)}
                         className="refresh-button"
                         data-role="refresh-button"
+                        aria-label="새로고침"
+                        title="새로고침"
                     >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>

@@ -1,6 +1,6 @@
 {
   "name": "scratcha-sdk",
-  "version": "2.0.10",
+  "version": "2.0.14",
   "type": "module",
   "description": "Scratcha SDK for React applications with canvas, image processing, and API communication",
   "main": "dist/index.umd.cjs",
@@ -28,7 +28,6 @@
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"
   },
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/react": "^19.1.10",
@@ -40,6 +39,7 @@
     "globals": "^16.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "sharp": "^0.34.3",
     "vite": "^7.1.2"
   },
   "keywords": [

@@ -1,6 +1,13 @@
 // CSS 스타일을 JavaScript에 인라인으로 주입
 (function () {
   if (typeof document !== 'undefined') {
+    // LCP 이미지 preload 실행
+    import('./utils/imageAssets.js').then(({ preloadLCPImages }) => {
+      preloadLCPImages();
+    }).catch(err => {
+      console.warn('LCP 이미지 preload 실패:', err);
+    });
+
     const style = document.createElement('style');
     style.textContent = `
       /* Animations - 전역에서 필요 */
@@ -31,7 +38,7 @@
         padding: 0;
         position: relative;
         width: 340px;
-        height: 600px;
+        height: 562px;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 20px;
@@ -77,6 +84,8 @@
         width: 100%;
         height: auto;
         max-height: 48px;
+        object-fit: contain;
+        aspect-ratio: 6250 / 2163;
       }
 
       .scratcha-widget .canvas-area {
@@ -113,15 +122,15 @@
       }
 
       .scratcha-widget .instruction-area {
-        margin-bottom: 8px;
+        margin-bottom: 0;
         width: 100%;
       }
 
       .scratcha-widget .instruction-container {
-        background-color: #eff6ff;
-        border: 1px solid #bfdbfe;
+        background-color: #dbeafe;
+        border: 1px solid #93c5fd;
         border-radius: 8px;
-        padding: 8px 16px;
+        padding: 0;
         width: 100%;
         height: auto;
         position: relative;
@@ -134,7 +143,7 @@
       .scratcha-widget .instruction-text {
         font-size: 10px;
         font-weight: 700;
-        color: #1e40af;
+        color: #1e3a8a;
         text-align: center;
       }
 
@@ -165,14 +174,14 @@
       }
 
       .scratcha-widget .refresh-button:not(:disabled):hover {
-        background-color: #ca8a04;
+        background-color: #b45309;
         transform: translateY(-50%) scale(1.05);
       }
 
-             .scratcha-widget .refresh-button:not(:disabled):active {
-         background-color: #a16207;
-         transform: translateY(-50%) scale(0.95);
-       }
+      .scratcha-widget .refresh-button:not(:disabled):active {
+        background-color: #92400e;
+        transform: translateY(-50%) scale(0.95);
+      }
 
        .scratcha-widget .refresh-button:not(:disabled):focus {
          outline: none;
@@ -184,8 +193,8 @@
        }
 
       .scratcha-widget .refresh-button:disabled {
-        background-color: #d1d5db;
-        color: #6b7280;
+        background-color: #9ca3af;
+        color: #ffffff;
         cursor: not-allowed;
       }
 
@@ -201,7 +210,8 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
-        margin-bottom: 8px;
+        margin-top: 8px;
+        margin-bottom: 0;
         width: 100%;
       }
 
@@ -222,11 +232,11 @@
       }
 
       .scratcha-widget .answer-button:not(:disabled):hover {
-        background-color: #ca8a04;
+        background-color: #b45309;
       }
 
       .scratcha-widget .answer-button:not(:disabled):active {
-        background-color: #a16207;
+        background-color: #92400e;
         transform: scale(0.98);
       }
 
@@ -236,8 +246,10 @@
       }
 
       .scratcha-widget .answer-button:disabled {
-        opacity: 0.5;
+        background-color: #9ca3af;
+        color: #ffffff;
         cursor: not-allowed;
+        opacity: 1;
       }
 
       .scratcha-widget .overlay {
@@ -292,15 +304,15 @@
       }
 
       .scratcha-widget .result-text.success {
-        color: #059669;
+        color: #047857;
       }
 
       .scratcha-widget .result-text.error {
-        color: #dc2626;
+        color: #b91c1c;
       }
 
       .scratcha-widget .loading-text {
-        color: #6b7280;
+        color: #374151;
         font-weight: 500;
       }
 
@@ -325,6 +337,8 @@
         height: auto;
         max-height: 40px;
         opacity: 0.8;
+        object-fit: contain;
+        aspect-ratio: 6250 / 2163;
       }
 
       .scratcha-widget .error-title {
@@ -336,7 +350,7 @@
 
       .scratcha-widget .error-message {
         font-size: 14px;
-        color: #6b7280;
+        color: #374151;
         line-height: 1.6;
         margin-bottom: 28px;
       }
@@ -360,15 +374,15 @@
       }
 
       .scratcha-widget .retry-button:hover {
-        background-color: #ca8a04;
+        background-color: #b45309;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
       }
 
       .scratcha-widget .retry-button:active {
-        background-color: #a16207;
+        background-color: #92400e;
         transform: translateY(0);
-        box-shadow: 0 2px 6px rgba(234, 179, 8, 0.2);
+        box-shadow: 0 2px 6px rgba(217, 119, 6, 0.2);
       }
 
       /* Button component styles - SDK 내부에서만 사용 */
@@ -701,6 +715,32 @@
 
       .scratcha-widget .shadow-sm {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+    
+      /* SDK 내부 드래그 방지 스타일 */
+      .scratcha-widget a,
+      .scratcha-widget img {
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -o-user-select: none;
+        user-select: none;
+        pointer-events: none;
+      }
+      
+      /* 로고 이미지도 드래그 방지 */
+      .scratcha-widget .logo-container img {
+        pointer-events: none;
+      }
+      
+      /* 캔버스는 드래그 방지하지 않음 */
+      .scratcha-widget canvas {
+        pointer-events: auto;
       }
     `;
     document.head.appendChild(style);
