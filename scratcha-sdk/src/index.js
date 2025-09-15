@@ -30,15 +30,18 @@
         }
       }
 
-      /* SDK 컴포넌트에만 적용되는 스타일 */
+      /* SDK 컴포넌트에만 적용되는 스타일 - CSS 격리 강화 */
       .scratcha-widget {
-        /* SDK 내부 요소들에 대한 초기화 */
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+        /* CSS 격리 */
+        all: initial;
+        display: block;
         position: relative;
         width: 340px;
         height: 562px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         padding: 20px;
@@ -48,7 +51,13 @@
           0 4px 6px -2px rgba(0, 0, 0, 0.05);
       }
 
-      /* SDK 내부 버튼만 초기화 */
+      /* 위젯 내부 요소들에 대한 격리된 스타일 */
+      .scratcha-widget * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
       .scratcha-widget button {
         margin: 0;
         padding: 0;
@@ -132,7 +141,7 @@
         border-radius: 8px;
         padding: 0;
         width: 100%;
-        height: auto;
+        height: 32px;
         position: relative;
         display: flex;
         align-items: center;

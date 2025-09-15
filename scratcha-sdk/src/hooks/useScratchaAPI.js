@@ -78,7 +78,7 @@ export const useScratchaAPI = ({
   }, [apiKey, endpoint, mode])
 
   // 정답 검증 요청
-  const verifyAnswer = useCallback(async (clientToken, selectedAnswer) => {
+  const verifyAnswer = useCallback(async (clientToken, selectedAnswer, eventData = null) => {
     if (mode === 'demo') {
       setError(null)
 
@@ -93,7 +93,8 @@ export const useScratchaAPI = ({
           selectedAnswer: selectedAnswer,
           isCorrect: isCorrect,
           timestamp: Date.now(),
-          processingTime: Math.random() * 500 + 500 // 500-1000ms
+          processingTime: Math.random() * 500 + 500, // 500-1000ms
+          eventData: eventData // 이벤트 데이터 포함
         },
         message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
       }
@@ -110,6 +111,19 @@ export const useScratchaAPI = ({
     setError(null)
 
     try {
+      const requestPayload = {
+        answer: selectedAnswer,
+        ...(eventData && { meta: eventData.meta, events: eventData.events })
+      }
+
+      console.log('useScratchaAPI: 검증 요청 페이로드', {
+        answer: selectedAnswer,
+        hasEventData: !!eventData,
+        eventCount: eventData?.events?.length || 0,
+        metaKeys: eventData?.meta ? Object.keys(eventData.meta) : [],
+        payload: requestPayload
+      })
+
       const response = await fetch(`${endpoint}/api/captcha/verify`, {
         method: 'POST',
         headers: {
@@ -117,9 +131,7 @@ export const useScratchaAPI = ({
           'X-Client-Token': sanitizeHeaderValue(clientToken),
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          answer: selectedAnswer
-        })
+        body: JSON.stringify(requestPayload)
       })
 
       if (!response.ok) {
@@ -137,7 +149,8 @@ export const useScratchaAPI = ({
           selectedAnswer: selectedAnswer,
           isCorrect: result.result === 'success',
           timestamp: Date.now(),
-          processingTime: Math.random() * 500 + 500
+          processingTime: Math.random() * 500 + 500,
+          eventData: eventData // 이벤트 데이터 포함
         },
         message: result.message
       }

@@ -36,7 +36,7 @@ function App() {
                 <div className="bg-white rounded-lg shadow-lg p-6">
                     <ScratchaWidget
                         mode={mode}
-                        apiKey={mode === 'normal' ? 'your api key' : undefined}
+                        apiKey={mode === 'normal' ? 'api-key' : undefined}
                         endpoint="https://api.scratcha.cloud"
                     />
                 </div>

@@ -3,14 +3,14 @@ import Canvas from './Canvas'
 import Button from './Button'
 import { useScratchaAPI } from '../hooks/useScratchaAPI'
 import { getCoverImagePath, getLogoImagePath } from '../utils/imageUtils'
+import { useEventTracking } from './inputevent'
 
 const ScratchaWidget = ({
     apiKey,
     endpoint,
     onSuccess,
     onError,
-    mode = 'normal', // 'demo' | 'normal'
-    autoReset = true // 자동 리셋 여부
+    mode = 'normal' // 'demo' | 'normal'
 }) => {
     const [selectedAnswer, setSelectedAnswer] = useState(null)
     const [showResult, setShowResult] = useState(false)
@@ -20,9 +20,16 @@ const ScratchaWidget = ({
     const [isImageLoading, setIsImageLoading] = useState(false)
     const [apiError, setApiError] = useState(null)
     const [showErrorCover, setShowErrorCover] = useState(false)
+    const [isProblemLoaded, setIsProblemLoaded] = useState(false)
 
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
+
+    // ---- 이벤트 추적 훅 사용 (노말 모드에서만) ----
+    const eventTracking = useEventTracking({
+        enableTracking: mode === 'normal', // 노말 모드에서만 추적
+        isProblemLoaded: isProblemLoaded // 문제 로드 완료 후에만 추적
+    })
 
     const { isLoading, getCaptchaProblem, verifyAnswer } = useScratchaAPI({
         apiKey,
@@ -79,6 +86,10 @@ const ScratchaWidget = ({
                         if (mode === 'normal') {
                             setIsImageLoading(false)
                         }
+
+                        // 문제 로드 완료 상태 설정 (이벤트 추적 시작)
+                        setIsProblemLoaded(true)
+                        console.log('ScratchaWidget: 문제 로드 완료 - 이벤트 추적 시작')
                     })
                 })
             }
@@ -114,6 +125,7 @@ const ScratchaWidget = ({
         setIsImageLoading(false)
         setApiError(null)
         setShowErrorCover(false)
+        setIsProblemLoaded(false)
 
         // Canvas 초기화
         if (canvas1Ref.current) {
@@ -123,11 +135,16 @@ const ScratchaWidget = ({
             canvas2Ref.current.clear()
         }
 
+        // 이벤트 추적 시작 (노말 모드에서만)
+        if (mode === 'normal') {
+            eventTracking.startTracking()
+        }
+
         const timer = setTimeout(() => {
             initializeProblem()
         }, 100)
         return () => clearTimeout(timer)
-    }, [initializeProblem, mode])
+    }, [initializeProblem, mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleAnswerSelect = async (answer) => {
         if (isLoading || result) return
@@ -142,7 +159,17 @@ const ScratchaWidget = ({
         setSelectedAnswer(answer)
 
         try {
-            const response = await verifyAnswer(clientToken, answer)
+            // 이벤트 데이터 수집 (노말 모드에서만)
+            let eventData = null
+            if (mode === 'normal') {
+                eventData = eventTracking.getEventData()
+                console.log('ScratchaWidget: 이벤트 데이터 수집 완료', {
+                    eventCount: eventData.events.length,
+                    meta: eventData.meta
+                })
+            }
+
+            const response = await verifyAnswer(clientToken, answer, eventData)
             const verificationTime = Date.now() - startTime
 
             console.log('ScratchaWidget: 정답 검증 완료', {
@@ -151,7 +178,8 @@ const ScratchaWidget = ({
                 selectedAnswer: answer,
                 result: response.result,
                 message: response.message,
-                mode: mode
+                mode: mode,
+                hasEventData: !!eventData
             })
 
             if (response.success) {
@@ -164,12 +192,6 @@ const ScratchaWidget = ({
                 onError?.(response)
             }
 
-            // 데모 모드에서만 1초 후 자동 새로고침 (autoReset이 true일 때만)
-            if (mode === 'demo' && autoReset) {
-                setTimeout(() => {
-                    handleReset()
-                }, 1000)
-            }
         } catch (err) {
             const errorTime = Date.now() - startTime
             console.error('ScratchaWidget: 정답 검증 실패', {
@@ -178,6 +200,17 @@ const ScratchaWidget = ({
                 selectedAnswer: answer,
                 mode: mode
             })
+
+            // 에러 시에도 이벤트 데이터 수집 (노말 모드에서만)
+            let eventData = null
+            if (mode === 'normal') {
+                eventData = eventTracking.getEventData()
+                console.log('ScratchaWidget: 에러 시 이벤트 데이터 수집 완료', {
+                    eventCount: eventData.events.length,
+                    meta: eventData.meta
+                })
+            }
+
             setShowResult(true)
             onError?.(err)
         }
@@ -189,6 +222,9 @@ const ScratchaWidget = ({
         setResult(null)
         setApiError(null)
         setShowErrorCover(false)
+        setIsProblemLoaded(false)
+
+        // 이벤트 추적은 InputEvent.jsx에서 새로고침 버튼 클릭 시 자동으로 초기화됨
 
         // Canvas 초기화
         if (canvas1Ref.current) {
