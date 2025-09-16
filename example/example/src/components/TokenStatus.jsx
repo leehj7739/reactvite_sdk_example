@@ -63,8 +63,8 @@ const TokenStatus = () => {
 
                 <div className="token-info-row">
                     <span className="token-label">유효성:</span>
-                    <span className={`token-value ${tokenInfo.valid ? 'valid' : 'invalid'}`}>
-                        {tokenInfo.valid ? '✅ 유효' : '❌ 무효'}
+                    <span className={`token-value ${tokenInfo.isValid ? 'valid' : 'invalid'}`}>
+                        {tokenInfo.isValid ? '✅ 유효' : '❌ 무효'}
                     </span>
                 </div>
 

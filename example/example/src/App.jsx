@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ScratchaWidget } from 'scratcha-sdk'
 import TokenStatus from './components/TokenStatus'
-import { isCaptchaTokenValid, createCaptchaToken, clearCaptchaToken, getTokenInfo } from './utils/captchaToken'
+import { createCaptchaToken, clearCaptchaToken, getTokenInfo } from './utils/captchaToken'
 import './App.css'
 
 function App() {
@@ -14,14 +14,24 @@ function App() {
   // 토큰 상태 업데이트 (위젯이 로드되지 않은 경우에만)
   useEffect(() => {
     // 위젯이 로드된 상태에서는 토큰 상태 업데이트를 하지 않음
-    const isWidgetLoaded = currentPage === 'captcha' && !isCaptchaCompleted && !isCaptchaTokenValid();
+    const tokenInfo = getTokenInfo();
+    const isWidgetLoaded = currentPage === 'captcha' && !isCaptchaCompleted && !tokenInfo.isValid;
 
     if (isWidgetLoaded) {
       return; // 위젯이 로드된 상태에서는 업데이트 중단
     }
 
     const interval = setInterval(() => {
-      setTokenInfo(getTokenInfo());
+      const newTokenInfo = getTokenInfo();
+      setTokenInfo(newTokenInfo);
+
+      // 토큰이 만료되었고 현재 로그인 페이지에 있으면 메인 페이지로 리다이렉트
+      if (currentPage === 'login' && newTokenInfo.exists && !newTokenInfo.isValid) {
+        console.log('토큰 만료됨 - 메인 페이지로 리다이렉트');
+        clearCaptchaToken();
+        setCurrentPage('main');
+        setIsCaptchaCompleted(false);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
@@ -29,9 +39,10 @@ function App() {
 
   const handleLoginClick = () => {
     // 토큰이 유효하면 바로 로그인 페이지로
-    if (isCaptchaTokenValid()) {
+    const tokenInfo = getTokenInfo();
+    if (tokenInfo.isValid) {
       setCurrentPage('login');
-      setTokenInfo(getTokenInfo());
+      setTokenInfo(tokenInfo);
     } else {
       setCurrentPage('captcha');
       setIsCaptchaCompleted(false);
@@ -112,13 +123,13 @@ function App() {
       <div className="main-content">
         <h1>🎯 Scratcha 로그인</h1>
         <p>캡차 인증을 통해 안전하게 로그인하세요</p>
-        {tokenInfo.valid && (
+        {tokenInfo.isValid && (
           <div className="token-notice">
             <p>✅ 유효한 캡차 토큰이 있습니다. 바로 로그인할 수 있습니다.</p>
           </div>
         )}
         <button className="login-button" onClick={handleLoginClick}>
-          {tokenInfo.valid ? '바로 로그인' : '로그인 시작'}
+          {tokenInfo.isValid ? '바로 로그인' : '로그인 시작'}
         </button>
       </div>
     </div>
@@ -126,7 +137,8 @@ function App() {
 
   const renderCaptchaPage = () => {
     // 위젯이 로드되어야 하는지 확인
-    const shouldShowWidget = !isCaptchaCompleted && !isCaptchaTokenValid();
+    const tokenInfo = getTokenInfo();
+    const shouldShowWidget = !isCaptchaCompleted && !tokenInfo.isValid;
 
     return (
       <div className="captcha-page">
@@ -150,7 +162,7 @@ function App() {
             <div className="captcha-completed">
               <div className="completed-message">
                 <h3>캡차 인증 완료</h3>
-                <p>{isCaptchaTokenValid() ? '유효한 토큰이 있습니다.' : '결과를 확인해주세요.'}</p>
+                <p>{tokenInfo.isValid ? '유효한 토큰이 있습니다.' : '결과를 확인해주세요.'}</p>
               </div>
             </div>
           )}
@@ -167,9 +179,14 @@ function App() {
         <div className="user-info">
           <p>환영합니다, 사용자님!</p>
         </div>
-        <button className="logout-button" onClick={handleLogout}>
-          로그아웃
-        </button>
+        <div className="login-actions">
+          <button className="main-button" onClick={() => setCurrentPage('main')}>
+            메인으로
+          </button>
+          <button className="logout-button" onClick={handleLogout}>
+            로그아웃
+          </button>
+        </div>
       </div>
     </div>
   )
