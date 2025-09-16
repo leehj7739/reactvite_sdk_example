@@ -16,7 +16,11 @@ export default defineConfig({
     lib: {
       entry: 'src/index.js',
       name: 'ScratchaSDK',
-      fileName: 'index',
+      fileName: (format) => {
+        if (format === 'es') return 'index.js'
+        if (format === 'umd') return 'index.umd.js'
+        return 'index.js'
+      },
       formats: ['es', 'umd']
     },
     rollupOptions: {
@@ -25,7 +29,8 @@ export default defineConfig({
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM'
-        }
+        },
+        exports: 'named'
       }
     },
     cssCodeSplit: false,

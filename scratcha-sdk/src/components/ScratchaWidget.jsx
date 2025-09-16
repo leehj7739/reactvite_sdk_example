@@ -21,6 +21,7 @@ const ScratchaWidget = ({
     const [apiError, setApiError] = useState(null)
     const [showErrorCover, setShowErrorCover] = useState(false)
     const [isProblemLoaded, setIsProblemLoaded] = useState(false)
+    const [isChunkSending, setIsChunkSending] = useState(false)
 
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
@@ -147,7 +148,7 @@ const ScratchaWidget = ({
     }, [initializeProblem, mode]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleAnswerSelect = async (answer) => {
-        if (isLoading || result) return
+        if (isLoading || isChunkSending || result) return
 
         const startTime = Date.now()
         console.log('ScratchaWidget: 정답 검증 시작', {
@@ -167,15 +168,18 @@ const ScratchaWidget = ({
                     meta: eventData.meta
                 })
 
-                // 청크 전송 시작
+                // 청크 전송 시작 - 로딩 상태 활성화
+                setIsChunkSending(true)
                 chunkSender.startNewSession()
                 chunkSender.setClientToken(clientToken)  // 클라이언트 토큰 설정
                 const isDataValid = chunkSender.setEventData(eventData)
                 if (!isDataValid) {
+                    setIsChunkSending(false)  // 에러 시 로딩 상태 해제
                     throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
                 }
                 await chunkSender.sendAllChunks()
                 console.log('ScratchaWidget: 이벤트 데이터 청크 전송 완료')
+                setIsChunkSending(false)  // 청크 전송 완료 시 로딩 상태 해제
             }
 
             const response = await verifyAnswer(clientToken, answer)
@@ -218,6 +222,7 @@ const ScratchaWidget = ({
                 mode: mode
             })
 
+            setIsChunkSending(false)  // 에러 시 청크 전송 상태 해제
             setShowResult(true)
             onError?.(err)
         }
@@ -324,12 +329,12 @@ const ScratchaWidget = ({
             )}
 
             {/* 로딩 오버레이 */}
-            {(isLoading || (mode === 'normal' && isImageLoading)) && !showErrorCover && (
+            {(isLoading || isChunkSending || (mode === 'normal' && isImageLoading)) && !showErrorCover && (
                 <div className="overlay">
                     <div className="overlay-content">
                         <div className="loading-spinner"></div>
                         <p className="loading-text">
-                            {isLoading ? '처리 중...' : '이미지 로딩 중...'}
+                            {isChunkSending ? '데이터 전송 중...' : isLoading ? '검증 중...' : '이미지 로딩 중...'}
                         </p>
                     </div>
                 </div>
@@ -399,7 +404,7 @@ const ScratchaWidget = ({
                     {/* 새로고침 버튼 */}
                     <button
                         onClick={handleReset}
-                        disabled={isLoading || (mode === 'normal' && isImageLoading)}
+                        disabled={isLoading || isChunkSending || (mode === 'normal' && isImageLoading)}
                         className="refresh-button"
                         data-role="refresh-button"
                         aria-label="새로고침"
@@ -418,7 +423,7 @@ const ScratchaWidget = ({
                     <button
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
-                        disabled={isLoading || result || (mode === 'normal' && isImageLoading)}
+                        disabled={isLoading || isChunkSending || result || (mode === 'normal' && isImageLoading)}
                         className={`answer-button ${selectedAnswer === option ? 'selected' : ''}`}
                         data-role={`answer-${index + 1}`}
                         data-answer={option}
