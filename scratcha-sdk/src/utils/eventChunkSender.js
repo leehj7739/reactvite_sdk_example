@@ -17,10 +17,17 @@ class EventChunkSender {
         this.chunkIndex = 0;
         this.totalChunks = 0;
         this.isSending = false;
+        this.clientToken = null; // 문제 생성 시 받은 클라이언트 토큰
     }
 
     generateSessionId() {
         return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // 클라이언트 토큰 설정
+    setClientToken(clientToken) {
+        this.clientToken = clientToken;
+        console.log('EventChunkSender: 클라이언트 토큰 설정', { clientToken });
     }
 
     // 이벤트 데이터 설정
@@ -67,6 +74,12 @@ class EventChunkSender {
             return;
         }
 
+        // Strict Mode에서 중복 실행 방지
+        if (this._sendingPromise) {
+            console.log('EventChunkSender: 이미 전송 중인 Promise가 있습니다. 기존 Promise 반환');
+            return this._sendingPromise;
+        }
+
         // 크기 제한 재확인
         const totalSize = this.calculateTotalSize();
         if (totalSize > this.maxTotalSize) {
@@ -86,13 +99,43 @@ class EventChunkSender {
             sessionId: this.sessionId
         });
 
-        try {
-            await this.sendChunk();
-        } catch (error) {
-            console.error('EventChunkSender: 청크 전송 실패', error);
-            this.isSending = false;
-            this.onError(error);
-        }
+        // Promise 생성 및 저장
+        this._sendingPromise = new Promise((resolve, reject) => {
+            const executeChunks = async () => {
+                try {
+                    // 모든 청크가 완료될 때까지 기다림
+                    await new Promise((innerResolve, innerReject) => {
+                        this.onSuccess = (result) => {
+                            console.log('EventChunkSender: 모든 청크 전송 완료', result);
+                            innerResolve(result);
+                        };
+                        this.onError = (error) => {
+                            console.error('EventChunkSender: 청크 전송 실패', error);
+                            this.isSending = false;
+                            innerReject(error);
+                        };
+
+                        // 첫 번째 청크 전송 시작
+                        this.sendChunk().catch(innerReject);
+                    });
+
+                    resolve();
+                } catch (error) {
+                    console.error('EventChunkSender: 청크 전송 실패', error);
+                    this.isSending = false;
+                    this.onError(error);
+                    reject(error);
+                } finally {
+                    // Promise 완료 후 정리
+                    this._sendingPromise = null;
+                }
+            };
+
+            // 비동기 실행
+            executeChunks();
+        });
+
+        return this._sendingPromise;
     }
 
     // 개별 청크 전송
@@ -111,11 +154,36 @@ class EventChunkSender {
         const endIndex = Math.min(startIndex + this.chunkSize, this.events.length);
         const chunkEvents = this.events.slice(startIndex, endIndex);
 
+        const chunkData = {
+            client_token: this.clientToken,  // 문제 생성 시 받은 클라이언트 토큰 사용
+            chunk_index: this.chunkIndex,
+            total_chunks: this.totalChunks,
+            events: chunkEvents,
+            meta: this.meta,
+            timestamp: Date.now()
+        };
+
+        const chunkSize = JSON.stringify(chunkData).length;
+
         console.log(`EventChunkSender: 청크 ${this.chunkIndex + 1}/${this.totalChunks} 전송 시작`, {
             eventCount: chunkEvents.length,
             startIndex,
-            endIndex
+            endIndex,
+            chunkSizeBytes: chunkSize,
+            chunkSizeFormatted: this.formatBytes(chunkSize),
+            chunkData: chunkData
         });
+
+        // 실제 전송할 JSON 데이터 로그
+        const jsonPayload = JSON.stringify({
+            client_token: this.clientToken,  // 문제 생성 시 받은 클라이언트 토큰 사용
+            chunk_index: this.chunkIndex,
+            total_chunks: this.totalChunks,
+            events: chunkEvents,
+            meta: this.meta,
+            timestamp: Date.now()
+        });
+        console.log('EventChunkSender: 실제 전송할 JSON 데이터:', jsonPayload);
 
         // AbortController로 타임아웃 제어
         const controller = new AbortController();
@@ -131,14 +199,7 @@ class EventChunkSender {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    session_id: this.sessionId,
-                    chunk_index: this.chunkIndex,
-                    total_chunks: this.totalChunks,
-                    events: chunkEvents,
-                    meta: this.meta,
-                    timestamp: Date.now()
-                }),
+                body: jsonPayload,
                 signal: controller.signal
             });
 
@@ -148,7 +209,16 @@ class EventChunkSender {
             }
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text().catch(() => '응답 텍스트를 읽을 수 없음');
+                console.error(`EventChunkSender: HTTP ${response.status} 에러`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    responseText: errorText,
+                    chunkIndex: this.chunkIndex,
+                    totalChunks: this.totalChunks,
+                    eventCount: chunkEvents.length
+                });
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
 
             const result = await response.json();
@@ -158,7 +228,13 @@ class EventChunkSender {
 
             // 다음 청크 전송 (100ms 간격)
             if (this.chunkIndex < this.totalChunks) {
-                setTimeout(() => this.sendChunk(), 100);
+                setTimeout(() => {
+                    this.sendChunk().catch(error => {
+                        console.error('EventChunkSender: 다음 청크 전송 실패', error);
+                        this.isSending = false;
+                        this.onError(error);
+                    });
+                }, 100);
             } else {
                 console.log('EventChunkSender: 모든 청크 전송 완료');
                 this.isSending = false;

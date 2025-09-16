@@ -25,10 +25,10 @@ const ScratchaWidget = ({
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
 
-    // ---- 이벤트 추적 훅 사용 (노말 모드에서만) ----
+    // 이벤트 추적 설정
     const eventTracking = useEventTracking({
-        enableTracking: mode === 'normal', // 노말 모드에서만 추적
-        isProblemLoaded: isProblemLoaded // 문제 로드 완료 후에만 추적
+        enableTracking: mode === 'normal',
+        isProblemLoaded: isProblemLoaded
     })
 
     const { isLoading, getCaptchaProblem, verifyAnswer, chunkSender } = useScratchaAPI({
@@ -159,20 +159,26 @@ const ScratchaWidget = ({
         setSelectedAnswer(answer)
 
         try {
-            // 이벤트 데이터 수집 (노말 모드에서만)
-            let eventData = null
+            // 이벤트 데이터 수집 및 청크 전송 (노말 모드에서만)
             if (mode === 'normal') {
-                eventData = eventTracking.getEventData()
+                const eventData = eventTracking.getEventData()
                 console.log('ScratchaWidget: 이벤트 데이터 수집 완료', {
                     eventCount: eventData.events.length,
                     meta: eventData.meta
                 })
+
+                // 청크 전송 시작
+                chunkSender.startNewSession()
+                chunkSender.setClientToken(clientToken)  // 클라이언트 토큰 설정
+                const isDataValid = chunkSender.setEventData(eventData)
+                if (!isDataValid) {
+                    throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
+                }
+                await chunkSender.sendAllChunks()
+                console.log('ScratchaWidget: 이벤트 데이터 청크 전송 완료')
             }
 
-            // 청크 전송기 새 세션 시작
-            chunkSender.startNewSession()
-
-            const response = await verifyAnswer(clientToken, answer, eventData)
+            const response = await verifyAnswer(clientToken, answer)
             const verificationTime = Date.now() - startTime
 
             console.log('ScratchaWidget: 정답 검증 완료', {
@@ -181,8 +187,16 @@ const ScratchaWidget = ({
                 selectedAnswer: answer,
                 result: response.result,
                 message: response.message,
-                mode: mode,
-                hasEventData: !!eventData
+                mode: mode
+            })
+
+            // 캡차 검증 응답 상세 로그
+            console.log('ScratchaWidget: 캡차 검증 응답 상세', {
+                result: response.result,
+                message: response.message,
+                confidence: response.confidence,
+                verdict: response.verdict,
+                fullResponse: response
             })
 
             if (response.success) {
@@ -203,16 +217,6 @@ const ScratchaWidget = ({
                 selectedAnswer: answer,
                 mode: mode
             })
-
-            // 에러 시에도 이벤트 데이터 수집 (노말 모드에서만)
-            let eventData = null
-            if (mode === 'normal') {
-                eventData = eventTracking.getEventData()
-                console.log('ScratchaWidget: 에러 시 이벤트 데이터 수집 완료', {
-                    eventCount: eventData.events.length,
-                    meta: eventData.meta
-                })
-            }
 
             setShowResult(true)
             onError?.(err)

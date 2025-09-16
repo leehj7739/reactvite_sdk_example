@@ -23,7 +23,7 @@ export const useScratchaAPI = ({
 
   // 청크 전송기 인스턴스 (useMemo로 최적화)
   const chunkSender = useMemo(() => new EventChunkSender({
-    chunkSize: 50,
+    chunkSize: 35, // 20(성공) + 50(실패) = 70/2 = 35로 테스트
     apiEndpoint: endpoint,
     timeout: 25000, // 25초 타임아웃
     maxTotalSize: 10 * 1024 * 1024, // 10MB 총 크기 제한
@@ -105,23 +105,9 @@ export const useScratchaAPI = ({
   }, [apiKey, endpoint, mode])
 
   // 정답 검증 요청
-  const verifyAnswer = useCallback(async (clientToken, selectedAnswer, eventData = null) => {
+  const verifyAnswer = useCallback(async (clientToken, selectedAnswer) => {
     if (mode === 'demo') {
       setError(null)
-
-      // 데모 모드에서도 청크 전송 시뮬레이션
-      if (eventData) {
-        console.log('데모 모드: 이벤트 데이터 청크 전송 시뮬레이션')
-        chunkSender.startNewSession()
-
-        // 크기 제한 확인
-        const isDataValid = chunkSender.setEventData(eventData)
-        if (!isDataValid) {
-          throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
-        }
-
-        await chunkSender.sendAllChunks()
-      }
 
       // 데모 모드에서 실제 정답 검증 (clientToken에서 정답 추출)
       const correctAnswer = clientToken.split('-').pop() // clientToken의 마지막 부분이 정답
@@ -135,7 +121,6 @@ export const useScratchaAPI = ({
           isCorrect: isCorrect,
           timestamp: Date.now(),
           processingTime: Math.random() * 500 + 500, // 500-1000ms
-          eventData: eventData, // 이벤트 데이터 포함
           sessionId: chunkSender.getSessionId() // 세션 ID 포함
         },
         message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
@@ -153,35 +138,9 @@ export const useScratchaAPI = ({
     setError(null)
 
     try {
-      // 이벤트 데이터가 있으면 청크로 전송
-      if (eventData) {
-        console.log('이벤트 데이터 청크 전송 시작')
-        chunkSender.startNewSession()
-
-        // 크기 제한 확인
-        const isDataValid = chunkSender.setEventData(eventData)
-        if (!isDataValid) {
-          throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
-        }
-
-        await chunkSender.sendAllChunks()
-        console.log('이벤트 데이터 청크 전송 완료')
-      }
-
       const requestPayload = {
-        answer: selectedAnswer,
-        session_id: chunkSender.getSessionId(),
-        ...(eventData && { meta: eventData.meta, events: eventData.events })
+        answer: selectedAnswer
       }
-
-      console.log('useScratchaAPI: 검증 요청 페이로드', {
-        answer: selectedAnswer,
-        session_id: chunkSender.getSessionId(),
-        hasEventData: !!eventData,
-        eventCount: eventData?.events?.length || 0,
-        metaKeys: eventData?.meta ? Object.keys(eventData.meta) : [],
-        payload: requestPayload
-      })
 
       const response = await fetch(`${endpoint}/api/captcha/verify`, {
         method: 'POST',
@@ -209,7 +168,6 @@ export const useScratchaAPI = ({
           isCorrect: result.result === 'success',
           timestamp: Date.now(),
           processingTime: Math.random() * 500 + 500,
-          eventData: eventData, // 이벤트 데이터 포함
           sessionId: chunkSender.getSessionId() // 세션 ID 포함
         },
         message: result.message
