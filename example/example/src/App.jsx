@@ -152,7 +152,7 @@ function App() {
           {shouldShowWidget && (
             <ScratchaWidget
               mode="normal"
-              apiKey=""
+              apiKey="0b34ecdd96c138e3a89e7cf0bc2d20da850ef6ff7b64b56541014e35a71934eb"
               endpoint="https://api.scratcha.cloud"
               onSuccess={handleSuccess}
               onError={handleError}
