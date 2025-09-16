@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { getRandomQuiz, generateQuizAnswerOptions } from '../utils/captchaData'
 import { getQuizImagePath } from '../utils/imageUtils'
+import EventChunkSender from '../utils/eventChunkSender'
 
 // 헤더 값을 안전하게 처리하는 함수
 const sanitizeHeaderValue = (value) => {
@@ -19,6 +20,32 @@ export const useScratchaAPI = ({
   const [isLoading, setIsLoading] = useState(false)
   const [lastResponse, setLastResponse] = useState(null)
   const [error, setError] = useState(null)
+
+  // 청크 전송기 인스턴스 (useMemo로 최적화)
+  const chunkSender = useMemo(() => new EventChunkSender({
+    chunkSize: 50,
+    apiEndpoint: endpoint,
+    timeout: 25000, // 25초 타임아웃
+    maxTotalSize: 10 * 1024 * 1024, // 10MB 총 크기 제한
+    onTimeout: (message) => {
+      console.error('청크 전송 타임아웃:', message);
+      setError({ message, type: 'chunk_timeout' });
+    },
+    onSuccess: (result) => {
+      console.log('청크 전송 성공:', result);
+    },
+    onError: (error) => {
+      console.error('청크 전송 실패:', error);
+      setError({ message: error.message, type: 'chunk_error' });
+    },
+    onSizeExceeded: (info) => {
+      console.error('청크 크기 초과:', info);
+      setError({
+        message: `데이터 크기가 너무 큽니다 (${info.actualSize > 0 ? Math.round(info.actualSize / 1024 / 1024 * 100) / 100 : 0}MB > ${Math.round(info.maxSize / 1024 / 1024 * 100) / 100}MB). 이벤트를 줄여서 다시 시도해주세요.`,
+        type: 'size_exceeded'
+      });
+    }
+  }), [endpoint])
 
   // 캡차 문제 요청
   const getCaptchaProblem = useCallback(async () => {
@@ -82,6 +109,20 @@ export const useScratchaAPI = ({
     if (mode === 'demo') {
       setError(null)
 
+      // 데모 모드에서도 청크 전송 시뮬레이션
+      if (eventData) {
+        console.log('데모 모드: 이벤트 데이터 청크 전송 시뮬레이션')
+        chunkSender.startNewSession()
+
+        // 크기 제한 확인
+        const isDataValid = chunkSender.setEventData(eventData)
+        if (!isDataValid) {
+          throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
+        }
+
+        await chunkSender.sendAllChunks()
+      }
+
       // 데모 모드에서 실제 정답 검증 (clientToken에서 정답 추출)
       const correctAnswer = clientToken.split('-').pop() // clientToken의 마지막 부분이 정답
       const isCorrect = selectedAnswer === correctAnswer
@@ -94,7 +135,8 @@ export const useScratchaAPI = ({
           isCorrect: isCorrect,
           timestamp: Date.now(),
           processingTime: Math.random() * 500 + 500, // 500-1000ms
-          eventData: eventData // 이벤트 데이터 포함
+          eventData: eventData, // 이벤트 데이터 포함
+          sessionId: chunkSender.getSessionId() // 세션 ID 포함
         },
         message: isCorrect ? '정답입니다!' : '오답입니다. 다시 시도해주세요.'
       }
@@ -111,13 +153,30 @@ export const useScratchaAPI = ({
     setError(null)
 
     try {
+      // 이벤트 데이터가 있으면 청크로 전송
+      if (eventData) {
+        console.log('이벤트 데이터 청크 전송 시작')
+        chunkSender.startNewSession()
+
+        // 크기 제한 확인
+        const isDataValid = chunkSender.setEventData(eventData)
+        if (!isDataValid) {
+          throw new Error('이벤트 데이터 크기가 제한을 초과했습니다.')
+        }
+
+        await chunkSender.sendAllChunks()
+        console.log('이벤트 데이터 청크 전송 완료')
+      }
+
       const requestPayload = {
         answer: selectedAnswer,
+        session_id: chunkSender.getSessionId(),
         ...(eventData && { meta: eventData.meta, events: eventData.events })
       }
 
       console.log('useScratchaAPI: 검증 요청 페이로드', {
         answer: selectedAnswer,
+        session_id: chunkSender.getSessionId(),
         hasEventData: !!eventData,
         eventCount: eventData?.events?.length || 0,
         metaKeys: eventData?.meta ? Object.keys(eventData.meta) : [],
@@ -150,7 +209,8 @@ export const useScratchaAPI = ({
           isCorrect: result.result === 'success',
           timestamp: Date.now(),
           processingTime: Math.random() * 500 + 500,
-          eventData: eventData // 이벤트 데이터 포함
+          eventData: eventData, // 이벤트 데이터 포함
+          sessionId: chunkSender.getSessionId() // 세션 ID 포함
         },
         message: result.message
       }
@@ -165,7 +225,7 @@ export const useScratchaAPI = ({
     } finally {
       setIsLoading(false)
     }
-  }, [apiKey, endpoint, mode])
+  }, [apiKey, endpoint, mode, chunkSender])
 
   return {
     // 상태
@@ -175,6 +235,9 @@ export const useScratchaAPI = ({
 
     // 메서드
     getCaptchaProblem,
-    verifyAnswer
+    verifyAnswer,
+
+    // 청크 전송기 (외부에서 접근 가능)
+    chunkSender
   }
 }

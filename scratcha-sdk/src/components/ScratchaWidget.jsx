@@ -31,7 +31,7 @@ const ScratchaWidget = ({
         isProblemLoaded: isProblemLoaded // 문제 로드 완료 후에만 추적
     })
 
-    const { isLoading, getCaptchaProblem, verifyAnswer } = useScratchaAPI({
+    const { isLoading, getCaptchaProblem, verifyAnswer, chunkSender } = useScratchaAPI({
         apiKey,
         endpoint,
         mode
@@ -168,6 +168,9 @@ const ScratchaWidget = ({
                     meta: eventData.meta
                 })
             }
+
+            // 청크 전송기 새 세션 시작
+            chunkSender.startNewSession()
 
             const response = await verifyAnswer(clientToken, answer, eventData)
             const verificationTime = Date.now() - startTime
