@@ -13,10 +13,12 @@ npm install scratcha-sdk
 - **캔버스 기반 이미지 처리**: 스크래치 기능이 있는 캔버스 컴포넌트
 - **캡차 시스템**: 이미지 기반 캡차 및 정답 검증
 - **API 통신**: 캡차 문제 요청 및 정답 검증
+- **토큰 관리**: 5분 유효한 캡차 토큰 시스템
 - **데모 모드**: 내부 데이터로 테스트 가능
 - **반응형 UI**: 순수 CSS 기반 모던한 디자인
 - **CORS 지원**: 외부 이미지 로딩 지원
 - **로딩 상태**: 이미지 로딩 및 API 요청 상태 표시
+- **환경변수 지원**: Vite 환경변수로 설정 관리
 
 ## 🎯 빠른 시작
 
@@ -52,7 +54,7 @@ function App() {
 export default App;
 ```
 
-### 실제 API 사용
+### 실제 API 사용 (직접 설정)
 
 ```jsx
 import React from "react";
@@ -61,7 +63,6 @@ import { ScratchaWidget } from "scratcha-sdk";
 function App() {
   const handleSuccess = (result) => {
     console.log("성공:", result);
-    // API 응답 구조: result.result.selectedAnswer
     alert(`성공! 선택한 답안: ${result.result.selectedAnswer}`);
   };
 
@@ -93,6 +94,10 @@ function App() {
 | `mode`      | `'demo' \| 'normal'`    | `'normal'` | 데모 모드 또는 실제 API 모드 |
 | `onSuccess` | `(result: any) => void` | -          | 성공 시 콜백                 |
 | `onError`   | `(error: any) => void`  | -          | 오류 시 콜백                 |
+
+## 🔐 토큰 관리 시스템
+
+SDK는 캡차 인증 성공 시 자동으로 5분 유효한 토큰을 생성합니다.
 
 ## 📡 API 응답 구조
 
@@ -138,6 +143,45 @@ function App() {
   options: ["사과", "바나나", "오렌지", "포도"]
 }
 ```
+
+## ⚠️ 에러 처리 가이드
+
+### 에러 타입별 처리
+
+```jsx
+const handleError = (error) => {
+  console.error("Scratcha 에러:", error);
+
+  // API 연결 에러 (네트워크 문제)
+  if (error.message && !error.result) {
+    console.log("API 연결 에러");
+    // 서버 연결 실패, 네트워크 문제 등
+    alert("서버와의 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
+  // 캡차 검증 실패 (오답)
+  if (error.result && !error.success) {
+    console.log("캡차 검증 실패");
+    console.log("선택한 답안:", error.result.selectedAnswer);
+    console.log("정답 여부:", error.result.isCorrect);
+    alert(
+      `캡차 인증에 실패했습니다. 선택한 답안: ${error.result.selectedAnswer}`
+    );
+    return;
+  }
+
+  // 기타 에러
+  alert(`알 수 없는 오류가 발생했습니다: ${error.message || "Unknown error"}`);
+};
+```
+
+### 일반적인 에러 상황
+
+1. **네트워크 에러**: 인터넷 연결 문제 또는 서버 다운
+2. **API 키 에러**: 잘못된 API 키 또는 권한 문제
+3. **캡차 실패**: 사용자가 잘못된 답안 선택
+4. **CORS 에러**: 도메인 설정 문제
 
 ## 🎨 컴포넌트
 
@@ -199,19 +243,27 @@ import { useScratchaAPI } from "scratcha-sdk";
 
 function MyComponent() {
   const { isLoading, getCaptchaProblem, verifyAnswer } = useScratchaAPI({
-    apiKey: "your-api-key",
-    endpoint: "https://api.example.com",
+    apiKey: import.meta.env.VITE_SCRATCHA_API_KEY,
+    endpoint: import.meta.env.VITE_SCRATCHA_ENDPOINT,
     mode: "normal",
   });
 
   const handleGetProblem = async () => {
-    const problem = await getCaptchaProblem();
-    console.log("캡차 문제:", problem);
+    try {
+      const problem = await getCaptchaProblem();
+      console.log("캡차 문제:", problem);
+    } catch (error) {
+      console.error("문제 가져오기 실패:", error);
+    }
   };
 
   const handleVerify = async (clientToken, answer) => {
-    const result = await verifyAnswer(clientToken, answer);
-    console.log("검증 결과:", result);
+    try {
+      const result = await verifyAnswer(clientToken, answer);
+      console.log("검증 결과:", result);
+    } catch (error) {
+      console.error("검증 실패:", error);
+    }
   };
 
   return (
@@ -271,8 +323,8 @@ const quizImage = getQuizImagePath(quiz.image_url);
 // normal 모드에서 이미지 로딩 중에는 상호작용이 차단됩니다
 <ScratchaWidget
   mode="normal"
-  apiKey="your-api-key"
-  endpoint="https://api.example.com"
+  apiKey={import.meta.env.VITE_SCRATCHA_API_KEY}
+  endpoint={import.meta.env.VITE_SCRATCHA_ENDPOINT}
   onSuccess={handleSuccess}
   onError={handleError}
 />
@@ -342,41 +394,3 @@ npm run dev
 ```bash
 npm run lint
 ```
-
-## 📄 라이선스
-
-MIT License
-
-## 🤝 기여
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📞 지원
-
-문제가 있거나 질문이 있으시면 이슈를 생성해주세요.
-
-## 🔄 버전 히스토리
-
-- **v2.0.3**: 최신 릴리스
-
-  - CSS 인라인 주입 방식으로 변경
-  - `instruction-container` 크기 문제 해결
-  - API 응답 구조 개선
-  - CORS 이미지 로딩 지원
-  - 로딩 상태 관리 개선
-
-- **v2.0.0**: 메이저 업데이트
-
-  - 헤더 값 안전 처리 (ISO-8859-1 오류 해결)
-  - 린트 에러 해결
-  - ASCII 범위 필터링
-
-- **v1.0.0**: 초기 릴리스
-  - 캔버스 기반 이미지 처리
-  - 캡차 시스템
-  - API 통신
-  - 데모 모드

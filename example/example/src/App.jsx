@@ -4,12 +4,17 @@ import TokenStatus from './components/TokenStatus'
 import { createCaptchaToken, clearCaptchaToken, getTokenInfo } from './utils/captchaToken'
 import './App.css'
 
+
+
 function App() {
   const [currentPage, setCurrentPage] = useState('main') // 'main', 'captcha', 'login'
   const [showModal, setShowModal] = useState(false)
   const [modalData, setModalData] = useState(null)
   const [isCaptchaCompleted, setIsCaptchaCompleted] = useState(false)
   const [tokenInfo, setTokenInfo] = useState(getTokenInfo())
+
+  const apiKey = import.meta.env.VITE_SCRATCHA_API_KEY
+  const endpoint = import.meta.env.VITE_SCRATCHA_ENDPOINT
 
   // 토큰 상태 업데이트 (위젯이 로드되지 않은 경우에만)
   useEffect(() => {
@@ -152,8 +157,8 @@ function App() {
           {shouldShowWidget && (
             <ScratchaWidget
               mode="normal"
-              apiKey="0b34ecdd96c138e3a89e7cf0bc2d20da850ef6ff7b64b56541014e35a71934eb"
-              endpoint="https://api.scratcha.cloud"
+              apiKey={apiKey}
+              endpoint={endpoint}
               onSuccess={handleSuccess}
               onError={handleError}
             />
