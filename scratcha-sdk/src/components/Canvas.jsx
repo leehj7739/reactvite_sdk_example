@@ -154,6 +154,30 @@ const Canvas = forwardRef(({
         context.clearRect(0, 0, width, height)
         context.drawImage(imageElement, 0, 0, width, height)
       }
+    },
+    // 캔버스에서 지워진 영역 퍼센트 계산 (소숫점 없이 올림)
+    getScratchedPercentage: () => {
+      if (!canvasRef.current || !enableScratch) return 0
+
+      const canvas = canvasRef.current
+      const ctx = canvas.getContext('2d')
+      const imageData = ctx.getImageData(0, 0, width, height)
+      const pixels = imageData.data
+
+      let totalPixels = 0
+      let transparentPixels = 0
+
+      // 4바이트씩 (RGBA) 검사
+      for (let i = 0; i < pixels.length; i += 4) {
+        totalPixels++
+        // 알파 채널이 0이면 투명 (스크래치된 영역)
+        if (pixels[i + 3] === 0) {
+          transparentPixels++
+        }
+      }
+
+      const percentage = (transparentPixels / totalPixels) * 100
+      return Math.ceil(percentage) // 소숫점 없이 올림
     }
   }))
 

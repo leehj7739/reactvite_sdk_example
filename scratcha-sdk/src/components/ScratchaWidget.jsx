@@ -22,6 +22,7 @@ const ScratchaWidget = ({
     const [showErrorCover, setShowErrorCover] = useState(false)
     const [isProblemLoaded, setIsProblemLoaded] = useState(false)
     const [isChunkSending, setIsChunkSending] = useState(false)
+    const [problemLoadTime, setProblemLoadTime] = useState(null) // 문제 로드 시간 추적
 
     const canvas1Ref = useRef(null)
     const canvas2Ref = useRef(null)
@@ -90,6 +91,7 @@ const ScratchaWidget = ({
 
                         // 문제 로드 완료 상태 설정 (이벤트 추적 시작)
                         setIsProblemLoaded(true)
+                        setProblemLoadTime(Date.now()) // 문제 로드 완료 시간 기록
                         console.log('ScratchaWidget: 문제 로드 완료 - 이벤트 추적 시작')
                     })
                 })
@@ -115,6 +117,31 @@ const ScratchaWidget = ({
         }
     }, [mode, getCaptchaProblem, onError])
 
+    // 검증시 전송할 추가 데이터 수집 함수
+    const collectVerificationData = useCallback(() => {
+        const currentTime = Date.now()
+
+        // 1. 캔버스 지워진 정도 퍼센트 (소숫점 없이 올림)
+        const scratchedPercentage = canvas1Ref.current?.getScratchedPercentage?.() || 0
+
+        // 2. 로드~정답선택까지 걸린 시간 (ms 단위)
+        const timeToAnswer = problemLoadTime ? currentTime - problemLoadTime : 0
+
+        const verificationData = {
+            scratchedPercentage,
+            scratchedTime: timeToAnswer
+        }
+
+        console.log('ScratchaWidget: 검증 데이터 수집 완료', {
+            scratchedPercentage: scratchedPercentage,  // 숫자만 (단위 없음)
+            scratchedTime: timeToAnswer,               // 숫자만 (단위 없음)
+            problemLoadTime: problemLoadTime ? new Date(problemLoadTime).toISOString() : 'null',
+            currentTime: new Date(currentTime).toISOString()
+        })
+
+        return verificationData
+    }, [problemLoadTime])
+
     // 컴포넌트 마운트 시 및 mode 변경 시 캡차 문제 초기화
     useEffect(() => {
         // mode가 변경되면 모든 상태 초기화
@@ -127,6 +154,7 @@ const ScratchaWidget = ({
         setApiError(null)
         setShowErrorCover(false)
         setIsProblemLoaded(false)
+        setProblemLoadTime(null) // 문제 로드 시간 초기화
 
         // Canvas 초기화
         if (canvas1Ref.current) {
@@ -159,6 +187,9 @@ const ScratchaWidget = ({
 
         setSelectedAnswer(answer)
 
+        // 검증 데이터 수집 (캔버스 지워진 정도 + 소요 시간)
+        const verificationData = collectVerificationData()
+
         try {
             // 이벤트 데이터 수집 및 청크 전송 (노말 모드에서만)
             if (mode === 'normal') {
@@ -182,7 +213,7 @@ const ScratchaWidget = ({
                 setIsChunkSending(false)  // 청크 전송 완료 시 로딩 상태 해제
             }
 
-            const response = await verifyAnswer(clientToken, answer)
+            const response = await verifyAnswer(clientToken, answer, verificationData)
             const verificationTime = Date.now() - startTime
 
             console.log('ScratchaWidget: 정답 검증 완료', {
@@ -235,6 +266,7 @@ const ScratchaWidget = ({
         setApiError(null)
         setShowErrorCover(false)
         setIsProblemLoaded(false)
+        setProblemLoadTime(null) // 문제 로드 시간 초기화
 
         // 이벤트 추적은 InputEvent.jsx에서 새로고침 버튼 클릭 시 자동으로 초기화됨
 

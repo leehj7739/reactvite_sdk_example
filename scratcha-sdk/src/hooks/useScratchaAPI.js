@@ -105,7 +105,7 @@ export const useScratchaAPI = ({
   }, [apiKey, endpoint, mode])
 
   // 정답 검증 요청
-  const verifyAnswer = useCallback(async (clientToken, selectedAnswer) => {
+  const verifyAnswer = useCallback(async (clientToken, selectedAnswer, verificationData = null) => {
     if (mode === 'demo') {
       setError(null)
 
@@ -139,8 +139,30 @@ export const useScratchaAPI = ({
 
     try {
       const requestPayload = {
-        answer: selectedAnswer
+        answer: selectedAnswer,
+        // 추가 검증 데이터 (이름은 향후 변경될 수 있음)
+        scratchedPercentage: verificationData?.scratchedPercentage || 0,    // 캔버스 지워진 정도 (숫자만)
+        scratchedTime: verificationData?.scratchedTime || 0                 // 로드~정답선택 시간 (숫자만)
       }
+
+      // 검증 데이터 콘솔 출력
+      if (verificationData) {
+        console.log('useScratchaAPI: 검증 추가 데이터 전송', {
+          scratchedPercentage: verificationData.scratchedPercentage,  // 숫자만
+          scratchedTime: verificationData.scratchedTime,              // 숫자만
+          actualPayload: requestPayload
+        })
+      }
+
+      console.log('useScratchaAPI: verify 요청 전송', {
+        endpoint: `${endpoint}/api/captcha/verify`,
+        method: 'POST',
+        headers: {
+          'X-Client-Token': `${clientToken.substring(0, 10)}...`,
+          'Content-Type': 'application/json'
+        },
+        payload: requestPayload
+      })
 
       const response = await fetch(`${endpoint}/api/captcha/verify`, {
         method: 'POST',
@@ -158,6 +180,12 @@ export const useScratchaAPI = ({
       }
 
       const result = await response.json()
+
+      console.log('useScratchaAPI: verify 응답 수신', {
+        status: response.status,
+        statusText: response.statusText,
+        responseData: result
+      })
 
       // API 응답 형식을 SDK 형식으로 변환
       const convertedResult = {
