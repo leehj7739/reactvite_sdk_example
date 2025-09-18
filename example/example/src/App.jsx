@@ -100,7 +100,7 @@ function App() {
       setModalData({
         type: 'failure',
         title: '캡차 실패',
-        message: '캡차 인증에 실패했습니다. 다시 시도해주세요.',
+        message: error.message || '캡차 인증에 실패했습니다. 다시 시도해주세요.',  // 서버 메시지 우선 사용
         buttonText: '메인 페이지로 돌아가기',
         onButtonClick: () => {
           setShowModal(false)
